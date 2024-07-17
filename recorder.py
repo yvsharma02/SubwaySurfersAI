@@ -45,4 +45,4 @@ class ScreenRecorder:
         win32gui.DeleteObject(self.saveBitMap.GetHandle())
         self.saveDC.DeleteDC()
         self.mfcDC.DeleteDC()
-        self.win32gui.ReleaseDC(self.hwnd, self.hwndDC)
+        win32gui.ReleaseDC(self.hwnd, self.hwndDC)
