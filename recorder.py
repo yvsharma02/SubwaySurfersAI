@@ -14,8 +14,8 @@ class ScreenRecorder:
         self.left, self.top, self.right, self.bot = win32gui.GetWindowRect(self.hwnd)
         self.left += xoffset
         self.top += yoffset
-        self.w = (self.right - self.left) + height_extension + xoffset
-        self.h = (self.bot - self.top) + width_extension + yoffset
+        self.w = (self.right - self.left) + width_extension + xoffset
+        self.h = (self.bot - self.top) + height_extension + yoffset
 
         self.hwndDC = win32gui.GetWindowDC(self.hwnd)
         self.mfcDC  = win32ui.CreateDCFromHandle(self.hwndDC)

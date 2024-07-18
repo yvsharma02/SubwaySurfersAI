@@ -8,7 +8,7 @@ import os
 IDLE_ACTION_TIME_MS = 10.0
 
 run_start_time = datetime.datetime.now()
-recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=0, width_extension=0)
+recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=131, width_extension=64)
 input_manager = InputManager(recorder)
 
 def get_time_path(run_start_time):
