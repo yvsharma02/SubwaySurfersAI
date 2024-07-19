@@ -5,7 +5,7 @@ import datetime
 import keyboard
 import os
 
-IDLE_ACTION_TIME_MS = 10.0
+IDLE_ACTION_TIME_MS = 500.0
 
 run_start_time = datetime.datetime.now()
 recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=131, width_extension=64)
