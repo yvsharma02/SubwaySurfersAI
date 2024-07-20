@@ -5,9 +5,8 @@ import matplotlib.pyplot as plt
 
 from common import CustomDataSet
 
-train_set = CustomDataSet("data/2024-07-18-23-35-35", (397, 859))
-test_set = CustomDataSet("data/2024-07-18-23-40-40", (397, 859))
-
+custom_train_dataset = CustomDataSet("data/2024-07-18-23-35-35", (397, 859))
+custom_test_dataset = CustomDataSet("data/2024-07-18-23-35-35", (397, 859))
 
 model = models.Sequential()
 model.add(layers.Input(shape=(397, 859, 3)))
@@ -25,15 +24,13 @@ model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-training_set = train_set.get_dataset().batch(1)
+training = custom_train_dataset.get_dataset().batch(8)
+testing = custom_test_dataset.get_dataset().batch(8)
 
-#print(training_set.batch(1))
-#test_images, test_labels = train_set.get_dataset()
-
-history = model.fit(training_set, epochs = 5, verbose = 1)
+history = model.fit(training, epochs = 5, verbose = 1, validation_data=testing)
 
 plt.plot(history.history['accuracy'], label='accuracy')
-#plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
