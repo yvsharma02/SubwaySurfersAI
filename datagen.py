@@ -66,6 +66,4 @@ while True:
     if keyboard.is_pressed('q'):
         break
 
-
-
 recorder.flush()

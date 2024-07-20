@@ -1,25 +1,38 @@
-from enum import Enum
+from enum import IntEnum
+
+import tensorflow as tf
+import numpy as np
 
 import os
-
 import datetime
 import cv2
 
+class Action(IntEnum):
+    SWIPE_UP = 0,
+    SWIPE_DOWN = 1,
+    SWIPE_LEFT = 2,
+    SWIPE_RIGHT = 3
+    DO_NOTHING = 4
 
-class Action(Enum):
-    SWIPE_UP = 1,
-    SWIPE_DOWN = 2,
-    SWIPE_LEFT = 3,
-    SWIPE_RIGHT = 4
-    DO_NOTHING = 5
-
-class Dataset:
+class CustomDataSet:
 
     dir = ""
     data = []
+    shape = ()
 
-    def __init__(self, dir) -> None:
+    def im_loader(path, label, shape):
+
+        raw = tf.io.read_file(path)
+        tensor = tf.io.decode_image(raw)
+        tensor = tf.cast(tensor, tf.float32) / 255.0
+        tensor = tf.reshape(tensor=tensor, shape=shape + tuple([3]))
+        print(tensor.shape)
+        return tensor, label
+
+    def __init__(self, dir, img_shape) -> None:
         self.dir = dir
+        self.shape = img_shape
+        print("Reading Dataset: " + dir)
         with open(os.path.join(dir, "commands.txt")) as commands:
             lines = commands.readlines()
             for line in lines:
@@ -27,8 +40,9 @@ class Dataset:
                     index, action, time, nl = line.split(';')
                     action = action.lstrip().rstrip()[7:]
                     time = time.lstrip().rstrip()
-                    self.data.append((Action[action], datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
-                elif (len(line.split(';')) == 3 or len(line.split(';')) == 3):
+#                    im = self.load_image(os.path.join(self.dir, str(index) + ".png"))
+                    self.data.append((os.path.join(self.dir, str(index) + ".png"), Action[action], datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
+                elif (len(line.split(';')) == 3 or len(line.split(';')) == 2):
                     start, end = line.split(';')
                     start = int(start)
                     end = int(end)
@@ -41,7 +55,14 @@ class Dataset:
         return len(self.data)
 
     def show_img(self, ind, waittime):
-        path = os.path.join(self.dir, str(ind) + ".png")
-        print(path)
-        cv2.imshow("image", cv2.imread(path, cv2.IMREAD_COLOR))
+        cv2.imshow("image", self.data[ind])
         cv2.waitKey(waittime)
+
+    def get_dataset(self) -> tf.data.Dataset:
+        labels = [int(datapoint[1]) for datapoint in self.data]
+        paths = [datapoint[0] for datapoint in self.data]
+        dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
+        dataset = dataset.map(lambda path, label: CustomDataSet.im_loader(path, label, self.shape))
+        # for x in dataset.take(1):
+        #    print(x)
+        return dataset
