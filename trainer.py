@@ -14,10 +14,11 @@ testing_dir = "data/2024-07-22-0-10-10"
 training_dir = [os.path.join("data/", d) for d in os.listdir("data/")]
 training_dir.remove(testing_dir)
 
-
 custom_train_dataset = CustomDataSet(training_dir[0])
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
 custom_test_dataset = CustomDataSet(testing_dir)
+
+custom_train_dataset.summary()
 
 model = models.Sequential()
 model.add(layers.Input(shape=config.FINAL_IMAGE_SHAPE))
@@ -28,6 +29,7 @@ model.add(layers.MaxPooling2D((4, 4)))
 model.add(layers.Flatten())
 model.add(layers.Dense(8, activation='relu'))
 model.add(layers.Dense(5))
+model.add(layers.Softmax())
 
 model.summary()
 model.compile(optimizer='adam',

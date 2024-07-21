@@ -61,6 +61,17 @@ class CustomDataSet:
         cv2.imshow("image", self.data[ind])
         cv2.waitKey(waittime)
 
+    def summary(self):
+        example_labels = {}
+        for data_point in self.data:
+#            im = data_point[0]
+            label = Action(data_point[1])
+            if (label in example_labels):
+                example_labels[label] += 1
+            else:
+                example_labels[label] = 1
+        print(example_labels)
+
     def get_dataset(self) -> tf.data.Dataset:
         labels = [datapoint[1] for datapoint in self.data]
         paths = [datapoint[0] for datapoint in self.data]
