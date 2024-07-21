@@ -2,6 +2,8 @@ from common import Action
 from recorder import ScreenRecorder
 import os
 import datetime
+import random
+import config
 
 class InputManager:
     input_cmd_map = {
@@ -18,11 +20,17 @@ class InputManager:
         self.screen_recorder = screen_recorder
 
     def perform_action(self, action, count = -1, captures_dir = "", record = False):
+        saved = False
         if (record):
-            self.screen_recorder.save(os.path.join(captures_dir, str(count) + ".png"))
-            with open (os.path.join(captures_dir, "commands.txt"), "a") as file:
-                file.write(str(count) + "; " + str(action) + "; " + str(datetime.datetime.now()) + ";\n")
+            if(action != Action.DO_NOTHING or random.random() >= config.NOTHING_SKIP_RATE):
+                if(self.screen_recorder.save(os.path.join(captures_dir, str(count) + ".png"))):
+                    with open (os.path.join(captures_dir, "commands.txt"), "a") as file:
+                        file.write(str(count) + "; " + str(action) + "; " + str(datetime.datetime.now()) + ";\n")
+                    
+                    print("Recorded: " + str(action))
+                    saved = True
 
         cmd = self.input_cmd_map[action]
         if (cmd):
             os.system(cmd)
+        return saved

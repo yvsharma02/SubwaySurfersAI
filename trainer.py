@@ -8,13 +8,19 @@ import common
 import datetime
 import os
 
-IM_DIM = (398, 863)
+import config
 
-custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
-custom_test_dataset = CustomDataSet("data/2024-07-21-14-3-3", IM_DIM)
+testing_dir = "data/2024-07-22-0-10-10"
+training_dir = [os.path.join("data/", d) for d in os.listdir("data/")]
+training_dir.remove(testing_dir)
+
+
+custom_train_dataset = CustomDataSet(training_dir[0])
+custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
+custom_test_dataset = CustomDataSet(testing_dir)
 
 model = models.Sequential()
-model.add(layers.Input(shape=IM_DIM + tuple([3])))
+model.add(layers.Input(shape=config.FINAL_IMAGE_SHAPE))
 model.add(layers.Conv2D(16, (9, 9), activation='relu'))
 model.add(layers.MaxPooling2D((4, 4)))
 model.add(layers.Conv2D(16, (3, 3), activation = 'relu'))
@@ -28,10 +34,10 @@ model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-training = custom_train_dataset.get_dataset().batch(8)
-testing = custom_test_dataset.get_dataset().batch(8)
+training = custom_train_dataset.get_dataset().batch(config.BATCH_SIZE)
+testing = custom_test_dataset.get_dataset().batch(config.BATCH_SIZE)
 
-history = model.fit(training, epochs = 1, verbose = 1, validation_data=testing)
+history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 
 out_dir = os.path.join("out/", common.date_to_dirname(datetime.datetime.now()))
 

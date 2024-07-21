@@ -7,6 +7,8 @@ import os
 import datetime
 import cv2
 
+import config
+
 def date_to_dirname(run_start_time):
     return str(run_start_time.date()) + "-" + str(run_start_time.hour) + "-" + str(run_start_time.minute) + "-" + str(run_start_time.minute)
 
@@ -19,21 +21,20 @@ class Action(IntEnum):
 
 class CustomDataSet:
 
-    dir = ""
-    data = []
-    shape = ()
+    data : list[tuple] = []
 
-    def im_loader(path, label, shape):
-
+    def im_loader(path, label):
         raw = tf.io.read_file(path)
         tensor = tf.io.decode_image(raw)
         tensor = tf.cast(tensor, tf.float32) / 255.0
-        tensor = tf.reshape(tensor=tensor, shape=shape + tuple([3]))
+        tensor = tf.reshape(tensor=tensor, shape=config.FINAL_IMAGE_SHAPE)
         return tensor, label
 
-    def __init__(self, dir, img_shape) -> None:
-        self.dir = dir
-        self.shape = img_shape
+    def __init__(self, dir) -> None:
+
+        if (not dir):
+            return
+
         print("Reading Dataset: " + dir)
         with open(os.path.join(dir, "commands.txt")) as commands:
             lines = commands.readlines()
@@ -43,7 +44,7 @@ class CustomDataSet:
                     action = action.lstrip().rstrip()
                     time = time.lstrip().rstrip()
 #                    im = self.load_image(os.path.join(self.dir, str(index) + ".png"))
-                    self.data.append((os.path.join(self.dir, str(index) + ".png"), int(action), datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
+                    self.data.append((os.path.join(dir, str(index) + ".png"), int(action), datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
                 elif (len(line.split(';')) == 3 or len(line.split(';')) == 2):
                     start, end = line.split(';')
                     start = int(start)
@@ -64,7 +65,12 @@ class CustomDataSet:
         labels = [datapoint[1] for datapoint in self.data]
         paths = [datapoint[0] for datapoint in self.data]
         dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
-        dataset = dataset.map(lambda path, label: CustomDataSet.im_loader(path, label, self.shape))
+        dataset = dataset.map(CustomDataSet.im_loader)
         # for x in dataset.take(1):
         #    print(x)
         return dataset
+
+def combine_custom_datasets(datasets : list[CustomDataSet]):
+    ds = CustomDataSet(None)
+    ds.data = [data_point for cds in datasets for data_point in cds.data]
+    return ds

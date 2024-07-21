@@ -7,16 +7,13 @@ import keyboard
 import os
 import numpy as np
 import keras
-
-IM_SHAPE = (397, 859)
+import config
 
 import tensorflow as tf
 #from keras import models, layers, losses
 
-IDLE_ACTION_TIME_MS = 1
-
 run_start_time = datetime.datetime.now()
-recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=131, width_extension=64)
+recorder = ScreenRecorder(config.SCREEN_NAME)
 input_manager = InputManager(recorder)
 
 #def get_time_path(run_start_time):
@@ -46,7 +43,8 @@ def update(count, last_action_time):
 
     for data in dataset:
         pred = model(data)
-        print(Action(np.argmax(pred)))
+        if (Action(np.argmax(pred)) != Action.DO_NOTHING):
+            print(Action(np.argmax(pred)))
 
     return last_action_time
 
@@ -57,14 +55,17 @@ last_fps_marker_frame = 0
 c = 0
 last_action_time = None
 while True:
-    new_action_time = update(c, last_action_time)
+    try:
+        new_action_time = update(c, last_action_time)
+    except:
+        pass
     if (new_action_time != last_action_time):
         c += 1
     last_action_time = new_action_time
     frame_counter += 1
 
     if ((datetime.datetime.now() - last_fps_marker_time).seconds >= 1):
-        print("FPS: " + str(frame_counter - last_fps_marker_frame))
+#        print("FPS: " + str(frame_counter - last_fps_marker_frame))
         last_fps_marker_time = datetime.datetime.now()
         last_fps_marker_frame = frame_counter
 
