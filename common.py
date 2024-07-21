@@ -7,6 +7,9 @@ import os
 import datetime
 import cv2
 
+def date_to_dirname(run_start_time):
+    return str(run_start_time.date()) + "-" + str(run_start_time.hour) + "-" + str(run_start_time.minute) + "-" + str(run_start_time.minute)
+
 class Action(IntEnum):
     SWIPE_UP = 0,
     SWIPE_DOWN = 1,

@@ -5,8 +5,15 @@ import common
 import datetime
 import keyboard
 import os
+import numpy as np
+import keras
 
-IDLE_ACTION_TIME_MS = 500.0
+IM_SHAPE = (397, 859)
+
+import tensorflow as tf
+#from keras import models, layers, losses
+
+IDLE_ACTION_TIME_MS = 1
 
 run_start_time = datetime.datetime.now()
 recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=131, width_extension=64)
@@ -22,28 +29,25 @@ def get_data_dir(run_start_time):
 
     return res
 
+
+model = tf.keras.models.load_model('out/2024-07-21-1-5-5/model.keras')
+
 def update(count, last_action_time):
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
-    if keyboard.is_pressed('up'):
-        input_manager.perform_action(Action.SWIPE_UP, count, get_data_dir(run_start_time), True)
-        last_action_time = datetime.datetime.now()
-    elif keyboard.is_pressed('down'):
-        input_manager.perform_action(Action.SWIPE_DOWN, count, get_data_dir(run_start_time), True)
-        last_action_time = datetime.datetime.now()
-    elif keyboard.is_pressed('left'):
-        input_manager.perform_action(Action.SWIPE_LEFT, count, get_data_dir(run_start_time), True)
-        last_action_time = datetime.datetime.now()
-    elif keyboard.is_pressed('right'):
-        input_manager.perform_action(Action.SWIPE_RIGHT, count, get_data_dir(run_start_time), True)
-        last_action_time = datetime.datetime.now()
-    else:
-        diff = (datetime.datetime.now() - last_action_time)
-        time_since_last_action = diff.seconds * 1000 + diff.microseconds / 1000
-        if (time_since_last_action >= IDLE_ACTION_TIME_MS):
-            input_manager.perform_action(Action.DO_NOTHING, count, get_data_dir(run_start_time), True)
-            last_action_time = datetime.datetime.now()
     
+    im = recorder.capture() 
+    tensor = np.asarray(im, dtype=np.float32)
+    tensor = tensor / 255
+#    print("________")
+#    print(tensor.shape)
+    tensor = tensor.reshape(IM_SHAPE + tuple([3]))
+    dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
+
+    for data in dataset:
+        pred = model(data)
+        print(Action(np.argmax(pred)))
+
     return last_action_time
 
 frame_counter = 0
