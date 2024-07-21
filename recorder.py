@@ -1,48 +1,54 @@
 import win32gui
 import win32ui
+import dxcam
 from ctypes import windll
 from PIL import Image
 
 class ScreenRecorder:
 
-    hwnd = None,
+#    hwnd = None,
     left, top, right, bot, w, h = None, None, None, None, None, None
-    hwndDC, mfcDC, saveDC, saveBitMap = None, None, None, None
+    offset = None
+    camera = None
+#    hwndDC, mfcDC, saveDC, saveBitMap = None, None, None, None
 
-    def __init__(self, window_name, height_extension = 300, width_extension = 300, xoffset = 0, yoffset = 0) -> None:
+    def __init__(self, window_name, shape_offset_ltrb) -> None:
         self.hwnd = win32gui.FindWindow(None, window_name)
         self.left, self.top, self.right, self.bot = win32gui.GetWindowRect(self.hwnd)
-        self.left += xoffset
-        self.top += yoffset
-        self.w = (self.right - self.left) + width_extension + xoffset
-        self.h = (self.bot - self.top) + height_extension + yoffset
+        self.offset = shape_offset_ltrb
 
-        self.hwndDC = win32gui.GetWindowDC(self.hwnd)
-        self.mfcDC  = win32ui.CreateDCFromHandle(self.hwndDC)
-        self.saveDC = self.mfcDC.CreateCompatibleDC()
+        self.camera = dxcam.create()
+        # self.hwndDC = win32gui.GetWindowDC(self.hwnd)
+        # self.mfcDC  = win32ui.CreateDCFromHandle(self.hwndDC)
+        # self.saveDC = self.mfcDC.CreateCompatibleDC()
 
-        self.saveBitMap = win32ui.CreateBitmap()
-        self.saveBitMap.CreateCompatibleBitmap(self.mfcDC, self.w, self.h)
+        # self.saveBitMap = win32ui.CreateBitmap()
+        # self.saveBitMap.CreateCompatibleBitmap(self.mfcDC, self.w, self.h)
 
-        self.saveDC.SelectObject(self.saveBitMap)
+        # self.saveDC.SelectObject(self.saveBitMap)
 
     def capture(self):
-        result = windll.user32.PrintWindow(self.hwnd, self.saveDC.GetSafeHdc(), 1)
-        if (result != 1):
-            return Exception("FAILED")
+        region = (self.left + self.offset[0], self.top + self.offset[1], self.right + self.offset[2], self.bot + self.offset[3])
+        print(region)
+        frame = self.camera.grab(region = region)
+        return Image.fromarray(frame)
+        # result = windll.user32.PrintWindow(self.hwnd, self.saveDC.GetSafeHdc(), 1)
+        # if (result != 1):
+        #     return Exception("FAILED")
 
-        bmpinfo = self.saveBitMap.GetInfo()
-        bmpstr = self.saveBitMap.GetBitmapBits(True)
-        return Image.frombuffer(
-            'RGB',
-            (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
-            bmpstr, 'raw', 'BGRX', 0, 1)
+        # bmpinfo = self.saveBitMap.GetInfo()
+        # bmpstr = self.saveBitMap.GetBitmapBits(True)
+        # return Image.frombuffer(
+        #     'RGB',
+        #     (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+        #     bmpstr, 'raw', 'BGRX', 0, 1)
 
     def save(self, path):
         self.capture().save(path)
 
     def flush(self):
-        win32gui.DeleteObject(self.saveBitMap.GetHandle())
-        self.saveDC.DeleteDC()
-        self.mfcDC.DeleteDC()
-        win32gui.ReleaseDC(self.hwnd, self.hwndDC)
+        pass
+        # win32gui.DeleteObject(self.saveBitMap.GetHandle())
+        # self.saveDC.DeleteDC()
+        # self.mfcDC.DeleteDC()
+        # win32gui.ReleaseDC(self.hwnd, self.hwndDC)

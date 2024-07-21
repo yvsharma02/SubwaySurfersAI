@@ -6,10 +6,10 @@ import datetime
 import keyboard
 import os
 
-IDLE_ACTION_TIME_MS = 500.0
+IDLE_ACTION_TIME_MS = 1000
 
 run_start_time = datetime.datetime.now()
-recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', xoffset=0, yoffset=0, height_extension=131, width_extension=64)
+recorder = ScreenRecorder('Android Emulator - Pixel_4a_API_33:5554', shape_offset_ltrb=(9, 38, -9, -9))
 input_manager = InputManager(recorder)
 
 #def get_time_path(run_start_time):
@@ -49,6 +49,9 @@ def update(count, last_action_time):
 frame_counter = 0
 last_fps_marker_time = datetime.datetime.now()
 last_fps_marker_frame = 0
+
+print("Press any key to start")
+keyboard.read_key()
 
 c = 0
 last_action_time = None

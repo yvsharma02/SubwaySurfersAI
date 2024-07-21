@@ -8,17 +8,19 @@ import common
 import datetime
 import os
 
-custom_train_dataset = CustomDataSet("data/2024-07-18-23-35-35", (397, 859))
-custom_test_dataset = CustomDataSet("data/2024-07-18-23-35-35", (397, 859))
+IM_DIM = (398, 863)
+
+custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
+custom_test_dataset = CustomDataSet("data/2024-07-21-14-3-3", IM_DIM)
 
 model = models.Sequential()
-model.add(layers.Input(shape=(397, 859, 3)))
-model.add(layers.Conv2D(32, (9, 9), activation='relu'))
+model.add(layers.Input(shape=IM_DIM + tuple([3])))
+model.add(layers.Conv2D(16, (9, 9), activation='relu'))
 model.add(layers.MaxPooling2D((4, 4)))
-model.add(layers.Conv2D(64, (3, 3), activation = 'relu'))
+model.add(layers.Conv2D(16, (3, 3), activation = 'relu'))
 model.add(layers.MaxPooling2D((4, 4)))
 model.add(layers.Flatten())
-model.add(layers.Dense(32, activation='relu'))
+model.add(layers.Dense(8, activation='relu'))
 model.add(layers.Dense(5))
 
 model.summary()
@@ -35,8 +37,6 @@ out_dir = os.path.join("out/", common.date_to_dirname(datetime.datetime.now()))
 
 if (not os.path.exists(out_dir)):
     os.mkdir(out_dir)
-
-model.save("model.keras")
 
 model.save(os.path.join(out_dir, "model.keras"))
 

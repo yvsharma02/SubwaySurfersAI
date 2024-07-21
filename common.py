@@ -29,7 +29,6 @@ class CustomDataSet:
         tensor = tf.io.decode_image(raw)
         tensor = tf.cast(tensor, tf.float32) / 255.0
         tensor = tf.reshape(tensor=tensor, shape=shape + tuple([3]))
-        print(tensor.shape)
         return tensor, label
 
     def __init__(self, dir, img_shape) -> None:
@@ -41,10 +40,10 @@ class CustomDataSet:
             for line in lines:
                 if (len(line.split(';')) == 4):
                     index, action, time, nl = line.split(';')
-                    action = action.lstrip().rstrip()[7:]
+                    action = action.lstrip().rstrip()
                     time = time.lstrip().rstrip()
 #                    im = self.load_image(os.path.join(self.dir, str(index) + ".png"))
-                    self.data.append((os.path.join(self.dir, str(index) + ".png"), Action[action], datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
+                    self.data.append((os.path.join(self.dir, str(index) + ".png"), int(action), datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
                 elif (len(line.split(';')) == 3 or len(line.split(';')) == 2):
                     start, end = line.split(';')
                     start = int(start)
@@ -62,7 +61,7 @@ class CustomDataSet:
         cv2.waitKey(waittime)
 
     def get_dataset(self) -> tf.data.Dataset:
-        labels = [int(datapoint[1]) for datapoint in self.data]
+        labels = [datapoint[1] for datapoint in self.data]
         paths = [datapoint[0] for datapoint in self.data]
         dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
         dataset = dataset.map(lambda path, label: CustomDataSet.im_loader(path, label, self.shape))
