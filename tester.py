@@ -8,12 +8,13 @@ import common
 import datetime
 import os
 import numpy as np
+import config
 
 #custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
-test_dataset_custom = CustomDataSet("data/2024-07-22-0-10-10")
+test_dataset_custom = CustomDataSet(os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET))
 
 test_dataset = test_dataset_custom.get_dataset().batch(1)
-model = tf.keras.models.load_model('out/2024-07-22-1-54-54/model.keras')
+model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
 
 for im, label in test_dataset:
     pred = model(im)

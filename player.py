@@ -23,20 +23,20 @@ run_start_time = datetime.datetime.now()
 recorder = ScreenRecorder(config.SCREEN_NAME)
 input_manager = InputManager(recorder)
 
-model = tf.keras.models.load_model('out/2024-07-22-2-1-1/model.keras')
+model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
 
 def update(count, last_action_time):
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
     try:
-        im = recorder.capture() 
+        im = recorder.capture().resize(config.INPUT_IMAGE_DIMENSIONS)
         tensor = np.asarray(im, dtype=np.float32)
         tensor = tensor / 255
-        tensor = tensor.reshape(config.FINAL_IMAGE_SHAPE)
+        tensor = tensor.reshape(config.TRAINING_IMAGE_DIMENSIONS)
         dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
 
         pred = model.predict(dataset)
-#        print(Action(np.argmax(pred[0])))
+        print(Action(np.argmax(pred[0])))
 
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
@@ -49,7 +49,7 @@ def update(count, last_action_time):
         input_manager.perform_action(Action(np.argmax(pred[0])))
 #        time.sleep(.333333)
     except:
-        pass
+       pass
 
     return last_action_time
 

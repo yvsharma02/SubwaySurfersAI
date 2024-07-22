@@ -31,7 +31,7 @@ class ScreenRecorder:
                 self.right + config.CAPTURE_LTRB_OFFSET[2],
                 self.bot + config.CAPTURE_LTRB_OFFSET[3])
         frame = self.camera.grab(region = region)
-        return Image.fromarray(frame).resize(config.CAPTURE_OUTPUT_IMG_DIM)
+        return Image.fromarray(frame)
         # result = windll.user32.PrintWindow(self.hwnd, self.saveDC.GetSafeHdc(), 1)
         # if (result != 1):
         #     return Exception("FAILED")

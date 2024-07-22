@@ -12,6 +12,20 @@ import config
 def date_to_dirname(run_start_time):
     return str(run_start_time.date()) + "-" + str(run_start_time.hour) + "-" + str(run_start_time.minute) + "-" + str(run_start_time.minute)
 
+# def get_data_dir(run_start_time):
+#     res = os.path.join(config.ORIGINAL_DATA_DIR, date_to_dirname(run_start_time))
+#     if (not os.path.exists(res)):
+#         os.makedirs(res)
+
+#     return res
+
+# def get_output_dir(run_start_time):
+#     res = os.path.join(config.MODEL_OUTPUT_DIR, date_to_dirname(run_start_time))
+#     if (not os.path.exists(res)):
+#         os.makedirs(res)
+
+#     return res
+
 class Action(IntEnum):
     SWIPE_UP = 0,
     SWIPE_DOWN = 1,
@@ -27,7 +41,7 @@ class CustomDataSet:
         raw = tf.io.read_file(path)
         tensor = tf.io.decode_image(raw)
         tensor = tf.cast(tensor, tf.float32) / 255.0
-        tensor = tf.reshape(tensor=tensor, shape=config.FINAL_IMAGE_SHAPE)
+        tensor = tf.reshape(tensor=tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
         return tensor, label
 
     def __init__(self, dir) -> None:

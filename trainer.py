@@ -10,8 +10,8 @@ import os
 
 import config
 
-testing_dir = "data/2024-07-22-0-10-10"
-training_dir = [os.path.join("data/", d) for d in os.listdir("data/")]
+testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
+training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
 training_dir.remove(testing_dir)
 
 custom_train_dataset = CustomDataSet(training_dir[0])
@@ -21,7 +21,7 @@ custom_test_dataset = CustomDataSet(testing_dir)
 custom_train_dataset.summary()
 
 model = models.Sequential()
-model.add(layers.Input(shape=config.FINAL_IMAGE_SHAPE))
+model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
 model.add(layers.Conv2D(16, (9, 9), activation='relu'))
 model.add(layers.MaxPooling2D((4, 4)))
 model.add(layers.Conv2D(16, (3, 3), activation = 'relu'))
@@ -36,12 +36,12 @@ model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-training = custom_train_dataset.get_dataset().batch(config.BATCH_SIZE)
-testing = custom_test_dataset.get_dataset().batch(config.BATCH_SIZE)
+training = custom_train_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
+testing = custom_test_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 
-out_dir = os.path.join("out/", common.date_to_dirname(datetime.datetime.now()))
+out_dir = os.path.join(config.MODEL_OUTPUT_DIR, common.date_to_dirname(datetime.datetime.now()))
 
 if (not os.path.exists(out_dir)):
     os.mkdir(out_dir)
