@@ -6,6 +6,7 @@ import datetime
 import keyboard
 import os
 import config
+import time
 
 #IDLE_ACTION_TIME_MS = 1000
 
@@ -57,6 +58,7 @@ keyboard.read_key()
 c = 0
 last_action_time = None
 while True:
+    frame_start_time = datetime.datetime.now()
     new_action_time = update(c, last_action_time)
     if (new_action_time != last_action_time):
         c += 1
@@ -70,5 +72,10 @@ while True:
 
     if keyboard.is_pressed('q'):
         break
+
+    frame_time = (datetime.datetime.now() - frame_start_time).microseconds / 1000
+    sleep_budget = 1000 / (config.FPS_LOCK - frame_time)
+    if (sleep_budget > 0):
+        time.sleep(sleep_budget / 1000)
 
 recorder.flush()
