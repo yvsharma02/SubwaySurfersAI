@@ -28,9 +28,11 @@ model.add(layers.Conv2D(32, (4, 4), activation = 'tanh'))
 model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(32, (3, 3), activation = 'tanh'))
 model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(32, (2, 2), activation = 'relu'))
+model.add(layers.MaxPooling2D((1, 2)))
 model.add(layers.Flatten())
 # Why are two layers less effective than one larger layer?
-model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(64, activation='tanh'))
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
 
