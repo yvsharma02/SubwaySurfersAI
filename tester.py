@@ -22,15 +22,21 @@ for i in range(0, 5):
 
 #print(confusion[0])
 
+indecisive = 0
+
 for im, label in test_dataset:
     pred = model(im)
     res = np.argmax(pred).item()
-
+    # if (pred[0][res].numpy().item() < .9):
+    #    indecisive += 1
+    #    continue
+    print(pred)
 #    print("Classified {} as {}", res, label.numpy().item())
     confusion[label.numpy().item()][res] += 1
 
 for r in confusion:
     print(r)
+print("Indecisive: ", indecisive)
 
 # plt.plot(history.history['accuracy'], label='accuracy')
 # plt.plot(history.history['val_accuracy'], label = 'val_accuracy')

@@ -41,15 +41,15 @@ def update(count, last_action_time):
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        if (diff < .5): # Indecisive
+        if (diff < .75): # Indecisive
             print("Indecisive")
             return last_action_time
 
         print(pred[0])
         input_manager.perform_action(Action(np.argmax(pred[0])))
-#        time.sleep(.333333)
+        time.sleep(.333333)
     except:
-       pass
+       print("Something has gone totally wrong")
 
     return last_action_time
 
@@ -76,5 +76,3 @@ while True:
 
     if keyboard.is_pressed('q'):
         break
-
-recorder.flush()

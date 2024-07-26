@@ -14,12 +14,6 @@ run_start_time = datetime.datetime.now()
 recorder = ScreenRecorder(config.SCREEN_NAME)
 input_manager = InputManager(recorder)
 
-out_dir = os.path.join(config.ORIGINAL_DATA_DIR, common.date_to_dirname(datetime.datetime.now()))
-
-if (not os.path.exists(out_dir)):
-    os.mkdir(out_dir)
-
-print(out_dir)
 def update(count, last_record_time : datetime.datetime):
 
     if (last_record_time != None and (datetime.datetime.now() - last_record_time).microseconds / 1000 < config.MIN_DELAY_BETWEEN_ACTIONS_MS):
@@ -51,31 +45,39 @@ def update(count, last_record_time : datetime.datetime):
 frame_counter = 0
 last_fps_marker_time = datetime.datetime.now()
 last_fps_marker_frame = 0
-
-print("Press any key to start")
-keyboard.read_key()
-
-c = 0
-last_action_time = None
-while True:
-    frame_start_time = datetime.datetime.now()
-    new_action_time = update(c, last_action_time)
-    if (new_action_time != last_action_time):
-        c += 1
-    last_action_time = new_action_time
-    frame_counter += 1
-
-    if ((datetime.datetime.now() - last_fps_marker_time).seconds >= 1):
-        print("FPS: " + str(frame_counter - last_fps_marker_frame))
-        last_fps_marker_time = datetime.datetime.now()
-        last_fps_marker_frame = frame_counter
-
-    if keyboard.is_pressed('q'):
+while (True):
+    print("Press f to start")
+    if (not keyboard.is_pressed('f') and not keyboard.is_pressed('t')):
+        continue
+    if (keyboard.is_pressed('t')):
         break
 
-    frame_time = (datetime.datetime.now() - frame_start_time).microseconds / 1000
-    sleep_budget = 1000 / (config.FPS_LOCK - frame_time)
-    if (sleep_budget > 0):
-        time.sleep(sleep_budget / 1000)
+    out_dir = os.path.join(config.ORIGINAL_DATA_DIR, common.date_to_dirname(datetime.datetime.now()))
 
-recorder.flush()
+    if (not os.path.exists(out_dir)):
+        os.mkdir(out_dir)
+
+    print(out_dir)
+
+    c = 0
+    last_action_time = None
+    while True:
+        frame_start_time = datetime.datetime.now()
+        new_action_time = update(c, last_action_time)
+        if (new_action_time != last_action_time):
+            c += 1
+        last_action_time = new_action_time
+        frame_counter += 1
+
+        if ((datetime.datetime.now() - last_fps_marker_time).seconds >= 1):
+            print("FPS: " + str(frame_counter - last_fps_marker_frame))
+            last_fps_marker_time = datetime.datetime.now()
+            last_fps_marker_frame = frame_counter
+
+        if keyboard.is_pressed('q'):
+            break
+
+        frame_time = (datetime.datetime.now() - frame_start_time).microseconds / 1000
+        sleep_budget = 1000 / (config.FPS_LOCK - frame_time)
+        if (sleep_budget > 0):
+            time.sleep(sleep_budget / 1000)
