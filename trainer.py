@@ -3,7 +3,7 @@ from keras import models, layers, losses
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-from common import CustomDataSet
+from common import CustomDataSet, Action
 import common
 import datetime
 import os
@@ -14,13 +14,17 @@ import config
 testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
 training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
 training_dir.remove(testing_dir)
+print(training_dir)
 
-custom_train_dataset = CustomDataSet(training_dir[0])
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
+#custom_train_dataset.remove_samples(int(Action.DO_NOTHING), .5)
+#custom_train_dataset.multiply_samples(int(Action.SWIPE_DOWN), 1.3)
+
 custom_test_dataset = CustomDataSet(testing_dir)
 
-
 custom_train_dataset.summary()
+
+#custom_train_dataset.summary()
 
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))

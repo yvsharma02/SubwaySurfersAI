@@ -6,6 +6,7 @@ import numpy as np
 import os
 import datetime
 import cv2
+import random
 
 import config
 
@@ -35,7 +36,7 @@ class Action(IntEnum):
 
 class CustomDataSet:
 
-    data : list[tuple] = []
+    data : list[tuple] = None
 
     def im_loader(path, label):
         raw = tf.io.read_file(path)
@@ -46,38 +47,48 @@ class CustomDataSet:
 
     def __init__(self, dir) -> None:
 
+        self.data = []
+
         if (not dir):
             return
 
         print("Reading Dataset: " + dir)
         with open(os.path.join(dir, "commands.txt")) as commands:
             lines = commands.readlines()
+            print(len(lines))
             for line in lines:
                 if (len(line.split(';')) == 4):
                     index, action, time, nl = line.split(';')
                     action = action.lstrip().rstrip()
                     time = time.lstrip().rstrip()
-#                    im = self.load_image(os.path.join(self.dir, str(index) + ".png"))
                     self.data.append((os.path.join(dir, str(index) + ".png"), int(action), datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
-                elif (len(line.split(';')) == 3 or len(line.split(';')) == 2):
-                    start, end = line.split(';')
-                    start = int(start)
-                    end = int(end)
-                    self.data = self.data[start:end]
                 else:
                     print("Invalid Dataset: " + line)
-                    self.data = []    
+                    self.data = []
 
     def count(self):
         return len(self.data)
+
+#Maybe any built in library has a better way to do this?
+    def remove_samples(self, action, keep_percent):
+        self.data = [ds for ds in self.data if ds[1] != action or random.random() < keep_percent]
+
+    def multiply_samples(self, action, multipler):
+        all = [ds for ds in self.data if ds[1] == action]
+        count = int(len(all) * (multipler - 1.0))
+        self.data.extend([all[int(random.random() * (len(all) - 1))] for i in range(0, count)])
 
     def show_img(self, ind, waittime):
         cv2.imshow("image", self.data[ind])
         cv2.waitKey(waittime)
 
     def summary(self):
+        c = 0
         example_labels = {}
         for data_point in self.data:
+#            print(c)
+#            c += 1
+#            print(data_point)
 #            im = data_point[0]
             label = Action(data_point[1])
             if (label in example_labels):
@@ -98,4 +109,6 @@ class CustomDataSet:
 def combine_custom_datasets(datasets : list[CustomDataSet]):
     ds = CustomDataSet(None)
     ds.data = [data_point for cds in datasets for data_point in cds.data]
+    # print("DSL::")
+#    print(len(datasets[0].data))
     return ds
