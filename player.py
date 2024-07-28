@@ -28,28 +28,55 @@ model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.
 def update(count, last_action_time):
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
-    try:
-        im = recorder.capture().resize(config.INPUT_IMAGE_DIMENSIONS)
-        tensor = np.asarray(im, dtype=np.float32)
-        tensor = tensor / 255
-        tensor = tensor.reshape(config.TRAINING_IMAGE_DIMENSIONS)
-        dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
+#    try:
+    im = recorder.capture().resize(config.INPUT_IMAGE_DIMENSIONS)
+    tensor = np.asarray(im, dtype=np.float32)
+    tensor = tensor / 255
+    tensor = tensor.reshape(config.TRAINING_IMAGE_DIMENSIONS)
+    dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
 
-        pred = model.predict(dataset)
-        print(Action(np.argmax(pred[0])))
+    pred = model.predict(dataset)
+    print(Action(np.argmax(pred[0])))
 
-        ranks = np.argsort(pred[0])
-        diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
+    ranks = np.argsort(pred[0])
+    diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        if (diff < .75): # Indecisive
-            print("Indecisive")
-            return last_action_time
+    if (diff < .75): # Indecisive
+        print("Indecisive")
+        return last_action_time
 
-        print(pred[0])
-        input_manager.perform_action(Action(np.argmax(pred[0])))
-        time.sleep(.333333)
-    except:
-       print("Something has gone totally wrong")
+    print(pred[0])
+    input_manager.perform_action(Action(np.argmax(pred[0])))
+    
+
+
+
+
+
+
+    #Select a convolutional layer
+    layer = model.layers[1]
+
+    #Get weights
+    kernels, biases = layer.get_weights()
+
+    #Normalize kernels into [0, 1] range for proper visualization
+    kernels = (kernels - np.min(kernels, axis=3)) / (np.max(kernels, axis=3) - np.min(kernels, axis=3))
+
+    #Weights are usually (width, height, channels, num_filters)
+    #Save weight images
+    import cv2
+
+    for i in range(kernels.shape[3]):
+        filter = kernels[:, :, :, i]
+        cv2.imwrite('filter-{}.png'.format(i), filter)
+    return
+
+
+
+    time.sleep(.333333)
+#    except:
+    print("Something has gone totally wrong")
 
     return last_action_time
 
