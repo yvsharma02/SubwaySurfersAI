@@ -7,6 +7,7 @@ from common import CustomDataSet
 import common
 import datetime
 import os
+import shutil
 
 import config
 
@@ -23,16 +24,19 @@ custom_train_dataset.summary()
 
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
-model.add(layers.Conv2D(32, (5, 5), activation='tanh'))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(32, (4, 4), activation = 'tanh'))
-model.add(layers.MaxPooling2D((2, 2)))
+
+model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
+model.add(layers.MaxPooling2D((3, 3)))
+
+#model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
+#model.add(layers.MaxPooling2D((2, 2)))
+
 model.add(layers.Flatten())
-#model.add(layers.Dense(256, activation='tanh'))
-model.add(layers.Dense(128, activation='tanh'))
-#model.add(layers.Dense(16, activation='relu'))
+model.add(layers.Dense(64, activation='relu'))
+
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
+
 
 model.summary()
 model.compile(optimizer='adam',
@@ -58,7 +62,11 @@ with open(os.path.join(out_dir, "summary.txt"), "w") as file:
     file.write("\n")
     file.write("Validation Accuracy: " + str(history.history['val_accuracy']))
     file.write("\nTraining Dataset Size: " + str(custom_train_dataset.count()))
-    file.write("\nVaalidation Dataset Size: " + str(custom_test_dataset.count()))
+    file.write("\nValidation Dataset Size: " + str(custom_test_dataset.count()))
+    file.write("\n__________________________\n")
+    model.summary(print_fn=lambda x: file.write(x + '\n'))
+
+shutil.copy("config.py", os.path.join(out_dir, "config.py"))
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
