@@ -1,6 +1,6 @@
 CAPTURE_LTRB_OFFSET = (9, 38, -9, -9)
 #The data may be saved correctly, but I think it's being read as it's transpose. Saving uses (width, height) tensorflow uses (height, width)
-INPUT_IMAGE_DIMENSIONS = (80, 172)
+INPUT_IMAGE_DIMENSIONS = (172, 80)
 
 TRAINING_IMAGE_DIMENSIONS = INPUT_IMAGE_DIMENSIONS + tuple([3])
 
@@ -17,7 +17,7 @@ DOWNSCALED_DATA_DIR = "generated/data/downscaled"
 MODEL_OUTPUT_DIR = "generated/output/"
 
 TEST_DATASET = "2024-07-26-23-20-20"
-PLAY_MODEL = "2024-07-29-2-37-37"
+PLAY_MODEL = "2024-07-30-0-8-8"
 
 SHUFFLE_BUFFER_SIZE = 5
 

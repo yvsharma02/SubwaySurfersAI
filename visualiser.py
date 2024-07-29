@@ -12,7 +12,6 @@ import time
 import matplotlib.pyplot as plt
 
 import cv2
-
 import tensorflow as tf
 #from keras import models, layers, losses
 
@@ -39,13 +38,14 @@ im = im_loader("generated/data/downscaled/2024-07-26-23-7-7/1.png")
 # plt.show()
 
 out = model_vis.predict(im)
-out = tf.squeeze(out[0], axis = 0)
+print(out.shape)
+out = tf.squeeze(out, axis = 0)
+print(out.shape)
 out = tf.split(out, num_or_size_splits=32, axis=-1)
-out = tf.squeeze(out)
-
 #print(out[0])
 
 for i in range(0, 32):
-    cv2.imshow("img", cv2.cvtColor(im.numpy().reshape(80, 172, 3), cv2.COLOR_RGB2BGR))
-    cv2.waitKey()
+#    cv2.imshow("im", out[i].numpy())
+#    cv2.waitKey()
+    cv2.imwrite("generated/visualiser/CF-" + str(i) + ".png", 255*out[i].numpy())
 #model_trim = keras.models.Model(input=[])

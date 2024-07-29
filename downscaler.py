@@ -39,4 +39,4 @@ for dataset in os.listdir(config.ORIGINAL_DATA_DIR):
             og_path = os.path.join(read_dir, im)
             save_path = os.path.join(save_dir, im)
 
-            Image.open(og_path).resize(config.INPUT_IMAGE_DIMENSIONS).save(save_path)
+            Image.open(og_path).resize(tuple(reversed(config.INPUT_IMAGE_DIMENSIONS))).save(save_path)

@@ -29,19 +29,14 @@ custom_train_dataset.summary()
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
 
-model.add(layers.Conv2D(32, (5, 5), activation='tanh'))
-model.add(layers.MaxPooling2D((4, 4)))
+model.add(layers.Conv2D(16, (5, 5), activation='tanh'))
+model.add(layers.MaxPooling2D((2, 2)))
 
-# model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
-# model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
+model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dense(256, activation='relu'))
-
-#model.add(layers.Dense(16, activation='relu'))
-
-# model.add(layers.Flatten())
-# model.add(layers.Dense(16, activation='relu'))
+model.add(layers.Dense(64, activation='relu'))
 
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
