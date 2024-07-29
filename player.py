@@ -9,6 +9,7 @@ import numpy as np
 import keras
 import config
 import time
+import PIL
 
 import tensorflow as tf
 #from keras import models, layers, losses

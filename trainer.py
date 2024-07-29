@@ -17,8 +17,8 @@ training_dir.remove(testing_dir)
 print(training_dir)
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
-#custom_train_dataset.remove_samples(int(Action.DO_NOTHING), .5)
-#custom_train_dataset.multiply_samples(int(Action.SWIPE_DOWN), 1.3)
+# custom_train_dataset.remove_samples(int(Action.DO_NOTHING), .5)
+# custom_train_dataset.multiply_samples(int(Action.SWIPE_DOWN), 1.3)
 
 custom_test_dataset = CustomDataSet(testing_dir)
 
@@ -29,14 +29,19 @@ custom_train_dataset.summary()
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
 
-model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
-model.add(layers.MaxPooling2D((3, 3)))
+model.add(layers.Conv2D(32, (5, 5), activation='tanh'))
+model.add(layers.MaxPooling2D((4, 4)))
 
-#model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
-#model.add(layers.MaxPooling2D((2, 2)))
+# model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
+# model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(256, activation='relu'))
+
+#model.add(layers.Dense(16, activation='relu'))
+
+# model.add(layers.Flatten())
+# model.add(layers.Dense(16, activation='relu'))
 
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
