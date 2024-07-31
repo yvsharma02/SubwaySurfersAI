@@ -11,16 +11,20 @@ import shutil
 
 import config
 
-testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
+#testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
 training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
-training_dir.remove(testing_dir)
+#training_dir.remove(testing_dir)
 print(training_dir)
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
+custom_train_dataset.remove_samples(Action.DO_NOTHING, .875)
+custom_train_dataset.multiply_samples(Action.SWIPE_DOWN, 3)
+custom_train_dataset.multiply_samples(Action.SWIPE_UP, 1.25)
+
 # custom_train_dataset.remove_samples(int(Action.DO_NOTHING), .5)
 # custom_train_dataset.multiply_samples(int(Action.SWIPE_DOWN), 1.3)
 
-custom_test_dataset = CustomDataSet(testing_dir)
+#custom_test_dataset = CustomDataSet(testing_dir)
 
 custom_train_dataset.summary()
 
@@ -29,14 +33,22 @@ custom_train_dataset.summary()
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
 
-model.add(layers.Conv2D(16, (5, 5), activation='tanh'))
-model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(32, (7, 7), activation='relu'))
+model.add(layers.MaxPooling2D((3, 3)))
 
-model.add(layers.Conv2D(32, (3, 3), activation='tanh'))
-model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(16, (3, 3), activation='tanh'))
+model.add(layers.AveragePooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dropout(0.3))
+
+model.add(layers.Dense(180, activation='relu'))
+model.add(layers.Dropout(0.3))
+
+model.add(layers.Dense(16, activation='relu'))
+model.add(layers.Dense(16, activation='relu'))
+#model.add(layers.Dense(16, activation='relu'))
+#model.add(layers.Dense(16, activation='relu'))
 
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
@@ -48,9 +60,8 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 training = custom_train_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
-testing = custom_test_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
-
-custom_test_dataset.summary()
+testing = training.take(int(len(training) * config.TRAINING_FRACTION))
+training = training.skip(int(len(training) * config.TRAINING_FRACTION))
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 
@@ -65,8 +76,8 @@ with open(os.path.join(out_dir, "summary.txt"), "w") as file:
     file.write("Accuracy: " + str(history.history['accuracy']))
     file.write("\n")
     file.write("Validation Accuracy: " + str(history.history['val_accuracy']))
-    file.write("\nTraining Dataset Size: " + str(custom_train_dataset.count()))
-    file.write("\nValidation Dataset Size: " + str(custom_test_dataset.count()))
+    file.write("\nTraining Dataset Size: " + str(len(training) * config.BATCH_SIZE))
+    file.write("\nValidation Dataset Size: " + str(len(testing) * config.BATCH_SIZE))
     file.write("\n__________________________\n")
     model.summary(print_fn=lambda x: file.write(x + '\n'))
 

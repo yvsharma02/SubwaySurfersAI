@@ -30,26 +30,32 @@ def update(count, last_action_time):
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
     try:
-        im = recorder.capture().resize(config.INPUT_IMAGE_DIMENSIONS)
+        im = recorder.capture().resize(tuple(reversed(config.INPUT_IMAGE_DIMENSIONS)))
         tensor = np.asarray(im, dtype=np.float32)
         tensor = tensor / 255
         tensor = tensor.reshape(config.TRAINING_IMAGE_DIMENSIONS)
+        print(tensor.shape)
         dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
 
         pred = model.predict(dataset)
-        print(Action(np.argmax(pred[0])))
+#        print(Action(np.argmax(pred[0])))
 
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        if (diff < .75): # Indecisive
+        if (diff < .97): # Indecisive
             print("Indecisive")
             return last_action_time
 
-        print(pred[0])
-        input_manager.perform_action(Action(np.argmax(pred[0])))
+#        print(pred[0])
+        if (Action(np.argmax(pred[0])) != Action.DO_NOTHING):
+#            time.sleep(.25)
+            input_manager.perform_action(Action(np.argmax(pred[0])))
+            time.sleep(.15)
+
+#            im.show()
+            
         
-        time.sleep(.333333)
     except:
         print("Something has gone totally wrong")
 
