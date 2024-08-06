@@ -17,9 +17,9 @@ training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(
 print(training_dir)
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
-custom_train_dataset.remove_samples(Action.DO_NOTHING, .875)
-custom_train_dataset.multiply_samples(Action.SWIPE_DOWN, 3)
-custom_train_dataset.multiply_samples(Action.SWIPE_UP, 1.25)
+custom_train_dataset.remove_samples(Action.DO_NOTHING, .5)
+#custom_train_dataset.multiply_samples(Action.SWIPE_DOWN, 3)
+#custom_train_dataset.multiply_samples(Action.SWIPE_UP, 1.25)
 
 # custom_train_dataset.remove_samples(int(Action.DO_NOTHING), .5)
 # custom_train_dataset.multiply_samples(int(Action.SWIPE_DOWN), 1.3)
@@ -29,24 +29,40 @@ custom_train_dataset.multiply_samples(Action.SWIPE_UP, 1.25)
 custom_train_dataset.summary()
 
 #custom_train_dataset.summary()
-
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
 
-model.add(layers.Conv2D(32, (7, 7), activation='relu'))
-model.add(layers.MaxPooling2D((3, 3)))
-
-model.add(layers.Conv2D(16, (3, 3), activation='tanh'))
+model.add(layers.Conv2D(32, (3, 3), activation='relu'))
 model.add(layers.AveragePooling2D((2, 2)))
 
+model.add(layers.Conv2D(16, (3, 3), activation='relu'))
+model.add(layers.AveragePooling2D((2, 2)))
+
+# model.add(layers.Conv2D(8, (3, 3), activation='relu'))
+# model.add(layers.AveragePooling2D((2, 2)))
+
+# model.add(layers.Conv2D(8, (3, 3), activation='relu'))
+# model.add(layers.AveragePooling2D((2, 1)))
+
 model.add(layers.Flatten())
-model.add(layers.Dropout(0.3))
+model.add(layers.Dropout(0.055))
 
-model.add(layers.Dense(180, activation='relu'))
-model.add(layers.Dropout(0.3))
+model.add(layers.Dense(150, activation='relu'))
+model.add(layers.Dropout(0.125))
+model.add(layers.Dense(150, activation='relu'))
+model.add(layers.Dropout(0.125))
 
-model.add(layers.Dense(16, activation='relu'))
-model.add(layers.Dense(16, activation='relu'))
+# model.add(layers.Dense(200, activation='relu'))
+# model.add(layers.Dropout(0.125))
+
+# model.add(layers.Dense(100, activation='relu'))
+# model.add(layers.Dropout(0.1))
+
+# model.add(layers.Dense(100, activation='relu'))
+# model.add(layers.Dropout(0.1))
+
+#model.add(layers.Dense(16, activation='relu'))
+#model.add(layers.Dense(16, activation='relu'))
 #model.add(layers.Dense(16, activation='relu'))
 #model.add(layers.Dense(16, activation='relu'))
 
@@ -59,9 +75,23 @@ model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-training = custom_train_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
-testing = training.take(int(len(training) * config.TRAINING_FRACTION))
-training = training.skip(int(len(training) * config.TRAINING_FRACTION))
+#custom_train_dataset.remove_samples(Action.DO_NOTHING, 0.5)
+training, testing = custom_train_dataset.get_dataset()
+
+training = training.shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
+testing = testing.shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
+
+#training = custom_train_dataset.get_dataset().shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
+#testing = training.take(int(len(training) * config.TRAINING_FRACTION))
+#training = training.skip(int(len(training) * config.TRAINING_FRACTION))
+
+# print("Filter Func should be called")
+# def filter_fun(im, label):
+#     print(im.shape)
+#     print(tf.keras.backend.get_value(label))
+#     return label != Action.DO_NOTHING
+
+#testing = testing.unbatch().filter(filter_fun).batch(config.BATCH_SIZE)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 

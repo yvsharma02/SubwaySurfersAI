@@ -97,14 +97,31 @@ class CustomDataSet:
                 example_labels[label] = 1
         print(example_labels)
 
-    def get_dataset(self) -> tf.data.Dataset:
-        labels = [datapoint[1] for datapoint in self.data]
-        paths = [datapoint[0] for datapoint in self.data]
+    def get_dataset(self) -> tuple[tf.data.Dataset, tf.data.Dataset]:
+        train_indices = [i for i in range(0, len(self.data)) if random.random() >= config.TRAINING_FRACTION]
+        test_indices = [i for i in range(0, len(self.data)) if i not in train_indices]
+        test_indices = [i for i in test_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)] 
+#        train_indices = [i for i in train_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)]        
+
+        # for i in test_indices:
+        #     print(Action(self.data[i][1]))
+
+        train_data = [self.data[i] for i in train_indices]
+        test_data = [self.data[i] for i in test_indices]
+
+        labels = [datapoint[1] for datapoint in train_data]
+        paths = [datapoint[0] for datapoint in train_data]
         dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
         dataset = dataset.map(CustomDataSet.im_loader)
         # for x in dataset.take(1):
         #    print(x)
-        return dataset
+
+        test_labels = [datapoint[1] for datapoint in test_data]
+        test_paths = [datapoint[0] for datapoint in test_data]
+        test_dataset = tf.data.Dataset.from_tensor_slices((test_paths, test_labels))
+        test_dataset = test_dataset.map(CustomDataSet.im_loader)
+
+        return dataset, test_dataset
 
 def combine_custom_datasets(datasets : list[CustomDataSet]):
     ds = CustomDataSet(None)
