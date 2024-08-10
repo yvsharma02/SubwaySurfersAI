@@ -101,7 +101,7 @@ class CustomDataSet:
         train_indices = [i for i in range(0, len(self.data)) if random.random() >= config.TRAINING_FRACTION]
         test_indices = [i for i in range(0, len(self.data)) if i not in train_indices]
         test_indices = [i for i in test_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)] 
-#        train_indices = [i for i in train_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)]        
+        train_indices = [i for i in train_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)]        
 
         # for i in test_indices:
         #     print(Action(self.data[i][1]))
