@@ -23,9 +23,9 @@ import config
 
 
 #custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
-test_dataset_custom = CustomDataSet(os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET))
+test_dataset_custom = CustomDataSet(os.path.join(config.DOWNSCALED_DATA_DIR, config.VALIDATION_DATASET))
 
-test_dataset = test_dataset_custom.get_dataset(only_nothing_skip_rate=0.975).batch(1)
+test_dataset = test_dataset_custom.get_dataset(nothing_skip_rate=0.975).batch(1)
 model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
 
 confusion = []

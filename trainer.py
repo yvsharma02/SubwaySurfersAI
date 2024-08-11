@@ -13,18 +13,19 @@ import architecture
 import config
 
 training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
-testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
-training_dir.remove(testing_dir)
+validation_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.VALIDATION_DATASET)
+training_dir.remove(validation_dir)
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
 
-testing_dataset = CustomDataSet(testing_dir)
-
 model = architecture.get_model()
 
-training = custom_train_dataset.get_dataset(only_nothing_skip_rate=config.TRAIN_DATA_NOTHING_RATE)
-testing = testing_dataset.get_dataset(only_nothing_skip_rate=config.TEST_DATA_NOTHING_RATE).prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
-training = training.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
+data = custom_train_dataset.get_dataset(nothing_skip_rate=config.TRAIN_DATA_NOTHING_RATE)
+data = data.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
+test_batch_count = int(len(data) * config.TRAINING_FRACTION)
+
+testing = data.take(test_batch_count)
+training = data.skip(test_batch_count)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 

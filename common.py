@@ -97,28 +97,29 @@ class CustomDataSet:
                 example_labels[label] = 1
 #        print(example_labels)
 
-    def get_dataset(self, only_nothing_skip_rate) -> tf.data.Dataset:
+    def get_dataset(self, nothing_skip_rate) -> tf.data.Dataset:
 
-        training_data = []
+        data = []
         labels = []
 
+        nothing_indices = [i for i in range(config.SEQUENCE_LEN - 1, len(self.data)) if self.data[i][1] == int(Action.DO_NOTHING)]
+
+        keep_count = int(len(nothing_indices) * (1.0 - nothing_skip_rate))
+        keep_indices = random.sample(nothing_indices, keep_count)
 
         for i in range(0, len(self.data) - (config.SEQUENCE_LEN - 1)):
+            
+            last_index = i + config.SEQUENCE_LEN - 1
+
+            if (self.data[last_index][1] == int(Action.DO_NOTHING) and last_index not in keep_indices):
+                continue
+
             img_list = [self.data[x][0] for x in range(i, i + config.SEQUENCE_LEN)]
-            # all_nothing = True
-            # for x in range(i, i + config.SEQUENCE_LEN):
-            #     if (self.data[x][1] != int(Action.DO_NOTHING)):
-            #         all_nothing = False
-            #         break
 
-            all_nothing = self.data[i + config.SEQUENCE_LEN - 1][1] == int(Action.DO_NOTHING)
+            data.append(img_list)
+            labels.append(self.data[last_index][1])
 
-            if (not all_nothing or random.random() > only_nothing_skip_rate):
-                training_data.append(img_list)
-                labels.append(self.data[i + config.SEQUENCE_LEN - 1][1])
-
-#        print(training_data)
-        dataset = tf.data.Dataset.from_tensor_slices((training_data, labels))
+        dataset = tf.data.Dataset.from_tensor_slices((data, labels))
         dataset = dataset.map(CustomDataSet.mapper, num_parallel_calls=tf.data.AUTOTUNE)
         return dataset
 
