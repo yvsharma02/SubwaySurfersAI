@@ -25,14 +25,8 @@ class InputManager:
 #        print(config.NOTHING_SKIP_RATE)
         image = None
         if (record):
-            if(action != Action.DO_NOTHING or random.random() >= config.NOTHING_SKIP_RATE):
-                image = self.screen_recorder.capture()
-                # if(self.screen_recorder.save(os.path.join(captures_dir, str(count) + ".png"))):
-                #     with open (os.path.join(captures_dir, "commands.txt"), "a") as file:
-                #         file.write(str(count) + "; " + str(action) + "; " + str(datetime.datetime.now()) + ";\n")
-                    
-                #     print("Recorded: " + str(action))
-                #     saved = True
+            image = self.screen_recorder.capture()
+            
         cmd = self.input_cmd_map[action]
         
         if (cmd):
@@ -45,5 +39,8 @@ class InputManager:
             image.save(os.path.join(captures_dir, str(count) + ".png"))
             print("Recorded: " + str(int(action)) + " with count: " + str(count))
             saved = True
+
+        if (record and not saved):
+            print("Failed to save.")
 
         return saved

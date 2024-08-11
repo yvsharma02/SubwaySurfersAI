@@ -13,20 +13,6 @@ import config
 def date_to_dirname(run_start_time):
     return str(run_start_time.date()) + "-" + str(run_start_time.hour) + "-" + str(run_start_time.minute) + "-" + str(run_start_time.minute)
 
-# def get_data_dir(run_start_time):
-#     res = os.path.join(config.ORIGINAL_DATA_DIR, date_to_dirname(run_start_time))
-#     if (not os.path.exists(res)):
-#         os.makedirs(res)
-
-#     return res
-
-# def get_output_dir(run_start_time):
-#     res = os.path.join(config.MODEL_OUTPUT_DIR, date_to_dirname(run_start_time))
-#     if (not os.path.exists(res)):
-#         os.makedirs(res)
-
-#     return res
-
 class Action(IntEnum):
     SWIPE_UP = 0,
     SWIPE_DOWN = 1,
@@ -38,12 +24,17 @@ class CustomDataSet:
 
     data : list[tuple] = None
 
-    def im_loader(path, label):
-        raw = tf.io.read_file(path)
-        tensor = tf.io.decode_image(raw)
-        tensor = tf.cast(tensor, tf.float32) / 255.0
-        tensor = tf.reshape(tensor=tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
-        return tensor, label
+    def mapper(data, label):
+
+        images = []
+        for path in data:
+            raw = tf.io.read_file(path)
+            tensor = tf.io.decode_image(raw)
+            tensor = tf.cast(tensor, tf.float32) / 255.0
+            tensor = tf.reshape(tensor=tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
+            images.append(tensor)
+        
+        return tf.stack(images, axis=0), label
 
     def __init__(self, dir) -> None:
 
@@ -52,10 +43,10 @@ class CustomDataSet:
         if (not dir):
             return
 
-        print("Reading Dataset: " + dir)
+#        print("Reading Dataset: " + dir)
         with open(os.path.join(dir, "commands.txt")) as commands:
             lines = commands.readlines()
-            print(len(lines))
+#            print(len(lines))
             for line in lines:
                 if (len(line.split(';')) == 4):
                     index, action, time, nl = line.split(';')
@@ -63,13 +54,13 @@ class CustomDataSet:
                     time = time.lstrip().rstrip()
                     self.data.append((os.path.join(dir, str(index) + ".png"), int(action), datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")))
                 else:
-                    print("Invalid Dataset: " + line)
+#                    print("Invalid Dataset: " + line)
                     self.data = []
 
     def count(self):
         return len(self.data)
 
-#Maybe any built in library has a better way to do this?
+    # Maybe any built in library has a better way to do this?
     def remove_samples(self, action, keep_percent):
         self.data = [ds for ds in self.data if ds[1] != action or random.random() < keep_percent]
 
@@ -86,46 +77,27 @@ class CustomDataSet:
         c = 0
         example_labels = {}
         for data_point in self.data:
-#            print(c)
-#            c += 1
-#            print(data_point)
-#            im = data_point[0]
             label = Action(data_point[1])
             if (label in example_labels):
                 example_labels[label] += 1
             else:
                 example_labels[label] = 1
-        print(example_labels)
+#        print(example_labels)
 
-    def get_dataset(self) -> tuple[tf.data.Dataset, tf.data.Dataset]:
-        train_indices = [i for i in range(0, len(self.data)) if random.random() >= config.TRAINING_FRACTION]
-        test_indices = [i for i in range(0, len(self.data)) if i not in train_indices]
-        test_indices = [i for i in test_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)] 
-        train_indices = [i for i in train_indices if int(self.data[i][1]) != int(Action.DO_NOTHING)]        
+    def get_dataset(self) -> tf.data.Dataset:
 
-        # for i in test_indices:
-        #     print(Action(self.data[i][1]))
+        training_data = []
+        labels = []
+        for i in range(0, len(self.data) - (config.SEQUENCE_LEN - 1)):
+            training_data.append([self.data[x][0] for x in range(i, i + config.SEQUENCE_LEN)])
+            labels.append(self.data[i + config.SEQUENCE_LEN - 1][1])
 
-        train_data = [self.data[i] for i in train_indices]
-        test_data = [self.data[i] for i in test_indices]
-
-        labels = [datapoint[1] for datapoint in train_data]
-        paths = [datapoint[0] for datapoint in train_data]
-        dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
-        dataset = dataset.map(CustomDataSet.im_loader)
-        # for x in dataset.take(1):
-        #    print(x)
-
-        test_labels = [datapoint[1] for datapoint in test_data]
-        test_paths = [datapoint[0] for datapoint in test_data]
-        test_dataset = tf.data.Dataset.from_tensor_slices((test_paths, test_labels))
-        test_dataset = test_dataset.map(CustomDataSet.im_loader)
-
-        return dataset, test_dataset
+#        print(training_data)
+        dataset = tf.data.Dataset.from_tensor_slices((training_data, labels))
+        dataset = dataset.map(CustomDataSet.mapper, num_parallel_calls=tf.data.AUTOTUNE)
+        return dataset
 
 def combine_custom_datasets(datasets : list[CustomDataSet]):
     ds = CustomDataSet(None)
     ds.data = [data_point for cds in datasets for data_point in cds.data]
-    # print("DSL::")
-#    print(len(datasets[0].data))
     return ds

@@ -12,46 +12,36 @@ import shutil
 import config
 
 training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
+testing_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET)
+training_dir.remove(testing_dir)
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
-custom_train_dataset.remove_samples(Action.DO_NOTHING, .5)
-custom_train_dataset.summary()
 
-
+testing_dataset = CustomDataSet(testing_dir)
 
 model = models.Sequential()
-model.add(layers.Input(shape=config.TRAINING_IMAGE_DIMENSIONS))
+model.add(layers.Input(shape=config.TRAINNIG_DATA_DIMENSIONS))
+model.add(layers.TimeDistributed(layers.Conv2D(32, (3, 3), activation='relu')))
+model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
+model.add(layers.TimeDistributed(layers.Flatten()))
 
-model.add(layers.Conv2D(32, (3, 3), activation='relu'))
-model.add(layers.AveragePooling2D((2, 2)))
-
-model.add(layers.Conv2D(16, (3, 3), activation='relu'))
-model.add(layers.AveragePooling2D((2, 2)))
-
-model.add(layers.Flatten())
-model.add(layers.Dropout(0.055))
-
-model.add(layers.Dense(150, activation='relu'))
-model.add(layers.Dropout(0.3))
-model.add(layers.Dense(150, activation='relu'))
-model.add(layers.Dropout(0.3))
-
+model.add(
+    layers.LSTM(1024, activation='relu', return_sequences=False)
+)
+model.add(
+    layers.Dense(150, activation='relu')
+)
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
-
-
-
 
 model.summary()
 model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+              metrics=['accuracy', 'f1'])
 
-#custom_train_dataset.remove_samples(Action.DO_NOTHING, 0.5)
-training, testing = custom_train_dataset.get_dataset()
-
-training = training.shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
-testing = testing.shuffle(buffer_size=config.SHUFFLE_BUFFER_SIZE).batch(config.BATCH_SIZE)
+training = custom_train_dataset.get_dataset()
+testing = testing_dataset.get_dataset()
+training = training.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
 
@@ -80,5 +70,4 @@ plt.ylabel('Accuracy')
 plt.ylim([0.5, 1])
 plt.legend(loc='lower right')
 
-#plt.show()
 plt.savefig(os.path.join(out_dir, 'history.png'))
