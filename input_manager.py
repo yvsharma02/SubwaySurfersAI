@@ -4,6 +4,8 @@ import os
 import datetime
 import random
 import config
+import numpy as np
+from PIL import Image
 
 class InputManager:
     input_cmd_map = {
@@ -32,11 +34,11 @@ class InputManager:
         if (cmd):
             os.system(cmd)
 
-        if (image != None):
+        if (image is not None):
 
             with open (os.path.join(captures_dir, "commands.txt"), "a") as file:
                 file.write(str(count) + "; " + str(int(action)) + "; " + str(datetime.datetime.now()) + ";\n")
-            image.save(os.path.join(captures_dir, str(count) + ".png"))
+            Image.fromarray(image).save(os.path.join(captures_dir, str(count) + ".png"))
             print("Recorded: " + str(int(action)) + " with count: " + str(count))
             saved = True
 

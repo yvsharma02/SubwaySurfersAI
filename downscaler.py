@@ -18,7 +18,7 @@ for dataset in os.listdir(config.ORIGINAL_DATA_DIR):
         txt = commands_txt.read()
         lines = txt.splitlines()[:-(config.END_TRIM_COUT)]
         if (len(lines) > config.BATCH_SIZE):
-            lines = lines[0:config.MAX_BATCH_SIZE]
+            lines = lines[0:config.MAX_RUN_SIZE]
 
         print(len(lines))
         

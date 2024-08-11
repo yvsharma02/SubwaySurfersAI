@@ -22,13 +22,13 @@ class ScreenRecorder:
                     self.right + config.CAPTURE_LTRB_OFFSET[2],
                     self.bot + config.CAPTURE_LTRB_OFFSET[3])
             frame = self.camera.grab(region = region)
-            return Image.fromarray(frame)
+            return frame
         except:
             return None
 
     def save(self, path):
         try:
-            self.capture().save(path)
+            Image.fromarray(self.capture()).save(path)
             return True
         except:
             return False

@@ -97,13 +97,25 @@ class CustomDataSet:
                 example_labels[label] = 1
 #        print(example_labels)
 
-    def get_dataset(self) -> tf.data.Dataset:
+    def get_dataset(self, only_nothing_skip_rate) -> tf.data.Dataset:
 
         training_data = []
         labels = []
+
+
         for i in range(0, len(self.data) - (config.SEQUENCE_LEN - 1)):
-            training_data.append([self.data[x][0] for x in range(i, i + config.SEQUENCE_LEN)])
-            labels.append(self.data[i + config.SEQUENCE_LEN - 1][1])
+            img_list = [self.data[x][0] for x in range(i, i + config.SEQUENCE_LEN)]
+            # all_nothing = True
+            # for x in range(i, i + config.SEQUENCE_LEN):
+            #     if (self.data[x][1] != int(Action.DO_NOTHING)):
+            #         all_nothing = False
+            #         break
+
+            all_nothing = self.data[i + config.SEQUENCE_LEN - 1][1] == int(Action.DO_NOTHING)
+
+            if (not all_nothing or random.random() > only_nothing_skip_rate):
+                training_data.append(img_list)
+                labels.append(self.data[i + config.SEQUENCE_LEN - 1][1])
 
 #        print(training_data)
         dataset = tf.data.Dataset.from_tensor_slices((training_data, labels))

@@ -8,6 +8,7 @@ import common
 import datetime
 import os
 import shutil
+import architecture
 
 import config
 
@@ -19,30 +20,10 @@ custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td 
 
 testing_dataset = CustomDataSet(testing_dir)
 
-model = models.Sequential()
-model.add(layers.Input(shape=config.TRAINNIG_DATA_DIMENSIONS))
-model.add(layers.TimeDistributed(layers.Conv2D(16, (3, 3), activation='relu')))
-model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
-model.add(layers.TimeDistributed(layers.Conv2D(16, (3, 3), activation='relu')))
-model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
-model.add(layers.TimeDistributed(layers.Flatten()))
+model = architecture.get_model()
 
-model.add(
-    layers.LSTM(32, activation='relu', return_sequences=False)
-)
-model.add(
-    layers.Dense(50, activation='relu')
-)
-model.add(layers.Dense(5))
-model.add(layers.Softmax())
-
-model.summary()
-model.compile(optimizer='adam',
-              loss= losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-
-training = custom_train_dataset.get_dataset()
-testing = testing_dataset.get_dataset().prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
+training = custom_train_dataset.get_dataset(only_nothing_skip_rate=config.TRAIN_DATA_NOTHING_RATE)
+testing = testing_dataset.get_dataset(only_nothing_skip_rate=config.TEST_DATA_NOTHING_RATE).prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 training = training.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
@@ -64,6 +45,7 @@ with open(os.path.join(out_dir, "summary.txt"), "w") as file:
     model.summary(print_fn=lambda x: file.write(x + '\n'))
 
 shutil.copy("config.py", os.path.join(out_dir, "config.py"))
+shutil.copy("architecture.py", os.path.join(out_dir, "architecture.py"))
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')

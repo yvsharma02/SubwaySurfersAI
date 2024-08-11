@@ -10,6 +10,7 @@ import keras
 import config
 import time
 import PIL
+import cv2
 
 import tensorflow as tf
 #from keras import models, layers, losses
@@ -26,19 +27,42 @@ input_manager = InputManager(recorder)
 
 model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
 
-last_frame_pred = Action.DO_NOTHING
-held_pred_for = 0
+#last_frame_pred = Action.DO_NOTHING
+#held_pred_for = 0
+
+context_window_len = 0
+context_window = []
+
+lastFrameTime = datetime.datetime.now()
 
 def update(count, last_action_time):
+    global context_window_len, lastFrameTime
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
     try:
-        im = recorder.capture().resize(tuple(reversed(config.INPUT_IMAGE_DIMENSIONS)))
-        tensor = np.asarray(im, dtype=np.float32)
+        im = cv2.resize(recorder.capture(), tuple(reversed(config.INPUT_IMAGE_DIMENSIONS)), interpolation=cv2.INTER_CUBIC)
+#        im = recorder.capture().resize(), PIL.Image.NEAREST)
+        tensor = np.asarray(im, dtype=np.float32).reshape(config.TRAINING_IMAGE_DIMENSIONS)
         tensor = tensor / 255
-        tensor = tensor.reshape(config.TRAINING_IMAGE_DIMENSIONS)
+
+        context_window.append(tensor)
+        context_window_len += 1
+
+        current_time = datetime.datetime.now()
+        diff = (current_time - lastFrameTime).total_seconds()
+        fps = 1.0 / diff
+        lastFrameTime = current_time
+        print("FPS: {}".format(fps))
+
+        if (context_window_len > config.SEQUENCE_LEN):
+            context_window_len -= 1
+            context_window.remove(context_window[0])
+
+        if(context_window_len < config.SEQUENCE_LEN):
+            return
+
 #        print(tensor.shape)
-        dataset = tf.data.Dataset.from_tensors(tensor).batch(1)
+        dataset = tf.data.Dataset.from_tensors(tf.stack(context_window)).batch(1)
 
         pred = model.predict(dataset)
 #        print(Action(np.argmax(pred[0])))
@@ -46,26 +70,26 @@ def update(count, last_action_time):
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        # if (diff < .8): # Indecisive
-        #     print("Indecisive")
-        #     return last_action_time
+        if (diff < config.MIN_PLAYER_CONFIDENCE): # Indecisive
+            print("Indecisive")
+            return last_action_time
 
         predicted_action = Action(np.argmax(pred[0]))
 #        print(pred[0])
-        global last_frame_pred
-        global held_pred_for
+#        global last_frame_pred
+#        global held_pred_for
         if (predicted_action != Action.DO_NOTHING):
-            if (last_frame_pred == predicted_action):
-                held_pred_for += 1
-                if (predicted_action != Action.SWIPE_UP and held_pred_for >= config.ACTION_HOLD_FRAME_COUT) or (held_pred_for >= config.ACTION_HOLD_FRAME_COUT + config.UP_EXTRA_HOLD_TIME):
-                    print(str(predicted_action) + " held for " + str(held_pred_for))
-                    input_manager.perform_action(predicted_action)
-                    last_frame_pred = Action.DO_NOTHING
-                    held_pred_for = 0
-                    time.sleep(.15)
-            else:
-                last_frame_pred = predicted_action
-                held_pred_for = 0
+            #if (last_frame_pred == predicted_action):
+            #    held_pred_for += 1
+            #    if (predicted_action != Action.SWIPE_UP and held_pred_for >= config.ACTION_HOLD_FRAME_COUT) or (held_pred_for >= config.ACTION_HOLD_FRAME_COUT + config.UP_EXTRA_HOLD_TIME):
+            #print(str(predicted_action) + " held for " + str(held_pred_for))
+            input_manager.perform_action(predicted_action)
+            #last_frame_pred = Action.DO_NOTHING
+            #held_pred_for = 0
+            time.sleep(.1)
+            #else:
+            #    last_frame_pred = predicted_action
+            #    held_pred_for = 0
 
 #            im.show()
 

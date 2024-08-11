@@ -25,7 +25,7 @@ import config
 #custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
 test_dataset_custom = CustomDataSet(os.path.join(config.DOWNSCALED_DATA_DIR, config.TEST_DATASET))
 
-test_dataset = test_dataset_custom.get_dataset().batch(1)
+test_dataset = test_dataset_custom.get_dataset(only_nothing_skip_rate=0.975).batch(1)
 model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
 
 confusion = []
@@ -42,7 +42,7 @@ for im, label in test_dataset:
     # if (pred[0][res].numpy().item() < .9):
     #    indecisive += 1
     #    continue
-    print(pred)
+#    print(pred)
 #    print("Classified {} as {}", res, label.numpy().item())
     confusion[label.numpy().item()][res] += 1
 
