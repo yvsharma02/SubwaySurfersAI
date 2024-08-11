@@ -25,16 +25,29 @@ class CustomDataSet:
     data : list[tuple] = None
 
     def mapper(data, label):
-
-        images = []
-        for path in data:
+        def process_path(path):
             raw = tf.io.read_file(path)
             tensor = tf.io.decode_image(raw)
             tensor = tf.cast(tensor, tf.float32) / 255.0
-            tensor = tf.reshape(tensor=tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
-            images.append(tensor)
+            tensor = tf.reshape(tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
+            return tensor
         
-        return tf.stack(images, axis=0), label
+        images = tf.map_fn(process_path, data, dtype=tf.float32)
+        
+        return images, label
+
+
+    # def mapper(data, label):
+
+    #     images = []
+    #     for path in data:
+    #         raw = tf.io.read_file(path)
+    #         tensor = tf.io.decode_image(raw)
+    #         tensor = tf.cast(tensor, tf.float32) / 255.0
+    #         tensor = tf.reshape(tensor=tensor, shape=config.TRAINING_IMAGE_DIMENSIONS)
+    #         images.append(tensor)
+        
+    #     return tf.stack(images, axis=0), label
 
     def __init__(self, dir) -> None:
 

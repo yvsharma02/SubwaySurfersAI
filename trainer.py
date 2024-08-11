@@ -21,15 +21,17 @@ testing_dataset = CustomDataSet(testing_dir)
 
 model = models.Sequential()
 model.add(layers.Input(shape=config.TRAINNIG_DATA_DIMENSIONS))
-model.add(layers.TimeDistributed(layers.Conv2D(32, (3, 3), activation='relu')))
+model.add(layers.TimeDistributed(layers.Conv2D(16, (3, 3), activation='relu')))
+model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
+model.add(layers.TimeDistributed(layers.Conv2D(16, (3, 3), activation='relu')))
 model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
 model.add(layers.TimeDistributed(layers.Flatten()))
 
 model.add(
-    layers.LSTM(1024, activation='relu', return_sequences=False)
+    layers.LSTM(32, activation='relu', return_sequences=False)
 )
 model.add(
-    layers.Dense(150, activation='relu')
+    layers.Dense(50, activation='relu')
 )
 model.add(layers.Dense(5))
 model.add(layers.Softmax())
@@ -37,10 +39,10 @@ model.add(layers.Softmax())
 model.summary()
 model.compile(optimizer='adam',
               loss= losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy', 'f1'])
+              metrics=['accuracy'])
 
 training = custom_train_dataset.get_dataset()
-testing = testing_dataset.get_dataset()
+testing = testing_dataset.get_dataset().prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 training = training.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 
 history = model.fit(training, epochs = config.EPOCH, verbose = 1, validation_data=testing)
