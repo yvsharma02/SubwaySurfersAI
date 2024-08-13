@@ -70,6 +70,7 @@ def update(count, last_action_time):
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
+        print("{} [max is {} @ {}]".format(pred, str(Action(ranks[-1])), pred[0][ranks[-1]]))
         if (diff < config.MIN_PLAYER_CONFIDENCE): # Indecisive
             print("Indecisive")
             return last_action_time

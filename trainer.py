@@ -15,12 +15,13 @@ import config
 training_dir = [os.path.join(config.DOWNSCALED_DATA_DIR, d) for d in os.listdir(config.DOWNSCALED_DATA_DIR)]
 validation_dir = os.path.join(config.DOWNSCALED_DATA_DIR, config.VALIDATION_DATASET)
 training_dir.remove(validation_dir)
+training_dir.remove(validation_dir + ' - reversed')
 
 custom_train_dataset = common.combine_custom_datasets([CustomDataSet(td) for td in training_dir])
 
 model = architecture.get_model()
 
-data = custom_train_dataset.get_dataset(nothing_skip_rate=config.TRAIN_DATA_NOTHING_RATE)
+data = custom_train_dataset.get_dataset(nothing_skip_rate=config.TRAIN_DATA_NOTHING_SKIP_RATE)
 data = data.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=config.BATCH_SIZE)
 test_batch_count = int(len(data) * config.TRAINING_FRACTION)
 
