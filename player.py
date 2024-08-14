@@ -72,29 +72,15 @@ def update(count, last_action_time):
 
         print("{} [max is {} @ {}]".format(pred, str(Action(ranks[-1])), pred[0][ranks[-1]]))
         if (diff < config.MIN_PLAYER_CONFIDENCE): # Indecisive
-            print("Indecisive")
-            return last_action_time
+            if (Action(ranks[-2]) == Action.DO_NOTHING):
+                print("Indecisive")
+                return last_action_time
 
         predicted_action = Action(np.argmax(pred[0]))
-#        print(pred[0])
-#        global last_frame_pred
-#        global held_pred_for
         if (predicted_action != Action.DO_NOTHING):
-            #if (last_frame_pred == predicted_action):
-            #    held_pred_for += 1
-            #    if (predicted_action != Action.SWIPE_UP and held_pred_for >= config.ACTION_HOLD_FRAME_COUT) or (held_pred_for >= config.ACTION_HOLD_FRAME_COUT + config.UP_EXTRA_HOLD_TIME):
-            #print(str(predicted_action) + " held for " + str(held_pred_for))
             input_manager.perform_action(predicted_action)
-            #last_frame_pred = Action.DO_NOTHING
-            #held_pred_for = 0
-            time.sleep(.1)
-            #else:
-            #    last_frame_pred = predicted_action
-            #    held_pred_for = 0
+            time.sleep(.125)
 
-#            im.show()
-
-        #TODO: Only perform action if it is consistent for the last 3-4 frames.    
         
     except Exception as e:
         print("Something has gone totally wrong: " + str(e))
