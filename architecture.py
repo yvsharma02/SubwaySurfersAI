@@ -8,15 +8,14 @@ def get_model() -> models.Model:
     model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
     model.add(layers.TimeDistributed(layers.Conv2D(32, (3, 3), activation='relu')))
     model.add(layers.TimeDistributed(layers.AveragePooling2D((2, 2))))
-    model.add(layers.TimeDistributed(layers.Conv2D(32, (3, 3), activation='relu')))
     model.add(layers.TimeDistributed(layers.Flatten()))
     model.add(layers.TimeDistributed(layers.Dropout(0.2)))
     model.add(
-        layers.TimeDistributed(layers.Dense(200, activation='relu'))
+        layers.TimeDistributed(layers.Dense(250, activation='relu'))
     )
     model.add(layers.Dropout(0.125))
     model.add(
-        layers.TimeDistributed(layers.Dense(200, activation='relu'))
+        layers.TimeDistributed(layers.Dense(125, activation='relu'))
     )
     model.add(layers.Dropout(0.125))
     model.add(
@@ -26,7 +25,7 @@ def get_model() -> models.Model:
         layers.Dense(20, activation='relu')
     )
     model.add(
-        layers.Dense(20, activation='relu')
+        layers.Dense(15, activation='relu')
     )
 
     model.add(layers.Dense(5))
