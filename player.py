@@ -9,8 +9,9 @@ import numpy as np
 import keras
 import config
 import time
-import PIL
 import cv2
+
+from PIL import Image
 
 import tensorflow as tf
 #from keras import models, layers, losses
@@ -32,16 +33,26 @@ model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.
 
 context_window_len = 0
 context_window = []
-
+im_save_count = 0
 lastFrameTime = datetime.datetime.now()
 
+out_dir = os.path.join(config.PLAYER_OUTPUT_DIR, config.PLAY_MODEL, common.date_to_dirname(datetime.datetime.now()))
+
+if (not os.path.exists(out_dir)):
+    os.makedirs(out_dir)
+
+pred_file = open(os.path.join(out_dir, "pred.txt"), "w")
+
 def update(count, last_action_time):
-    global context_window_len, lastFrameTime
+    global context_window_len, lastFrameTime, im_save_count
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
     try:
-        im = cv2.resize(recorder.capture(), tuple(reversed(config.INPUT_IMAGE_DIMENSIONS)), interpolation=cv2.INTER_CUBIC)
-#        im = recorder.capture().resize(), PIL.Image.NEAREST)
+        arr = recorder.capture()
+        im = Image.fromarray(arr).resize(tuple(reversed(config.INPUT_IMAGE_DIMENSIONS)))
+        im_save_count += 1
+        im.save(os.path.join(out_dir, str(im_save_count) + ".png"))
+
         tensor = np.asarray(im, dtype=np.float32).reshape(config.TRAINING_IMAGE_DIMENSIONS)
         tensor = tensor / 255
 
@@ -49,8 +60,8 @@ def update(count, last_action_time):
         context_window_len += 1
 
         current_time = datetime.datetime.now()
-        diff = (current_time - lastFrameTime).total_seconds()
-        fps = 1.0 / diff
+        time_diff = (current_time - lastFrameTime).total_seconds()
+        fps = 1.0 / time_diff
         lastFrameTime = current_time
         print("FPS: {}".format(fps))
 
@@ -61,25 +72,57 @@ def update(count, last_action_time):
         if(context_window_len < config.SEQUENCE_LEN):
             return
 
-#        print(tensor.shape)
         dataset = tf.data.Dataset.from_tensors(tf.stack(context_window)).batch(1)
 
         pred = model.predict(dataset)
-#        print(Action(np.argmax(pred[0])))
 
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        print("{} [max is {} @ {}]".format(pred, str(Action(ranks[-1])), pred[0][ranks[-1]]))
-        if (diff < config.MIN_PLAYER_CONFIDENCE): # Indecisive
-            if (Action(ranks[-2]) == Action.DO_NOTHING):
-                print("Indecisive")
-                return last_action_time
-
+        perform = False
         predicted_action = Action(np.argmax(pred[0]))
-        if (predicted_action != Action.DO_NOTHING):
+
+        first_choice = ranks[-1]
+        second_choice = ranks[-2]
+
+        predicted_action = Action(first_choice)
+
+        if (first_choice != int(Action.SWIPE_LEFT) and first_choice != int(Action.SWIPE_RIGHT)):
+            perform = True
+        else:
+            if (pred[0][first_choice] + pred[0][second_choice] >= config.MIN_ACTION_CONFIDENCE[first_choice]):
+                perform = True
+
+        # for i in range(0, len(ranks)):
+        #     action_ind = ranks[-(i + 1)]
+        #     confidence = pred[0][action_ind]
+
+        #     combined_confidence = confidence
+
+        #     if (action_ind == int(Action.SWIPE_LEFT)):
+        #         if (ranks[-(i + 2)] == int(Action.SWIPE_RIGHT)):
+        #             combined_confidence += pred[0][-(i + 2)]
+        #     elif (action_ind == int(Action.SWIPE_RIGHT)):
+        #         if (ranks[-(i + 2)] == int(Action.SWIPE_LEFT)):
+        #             combined_confidence += pred[0][-(i + 2)]
+
+        #     if (combined_confidence > config.MIN_ACTION_CONFIDENCE[action_ind]):
+        #         perform = True
+        #         break
+
+        performed = False
+        if (predicted_action != Action.DO_NOTHING and perform and (datetime.datetime.now() - last_action_time).total_seconds() >= config.PLAYER_ACTION_PERFORM_COOLDOWN):
+            performed = True
             input_manager.perform_action(predicted_action)
-            time.sleep(.125)
+
+        info = "Count[{}]:\n{}\n[Max is: {} @ {}]\n[Frame Time: {}]\nPerformed Status: {}\n________________________________________\n\n".format(im_save_count, str(pred), str(Action(ranks[-1])), pred[0][ranks[-1]], time_diff, performed)
+        print(info)
+        pred_file.write(info)
+
+        if (performed):
+            return datetime.datetime.now()
+        return last_action_time
+#            time.sleep(config.PLAYER_ACTION_PERFORM_COOLDOWN)
 
         
     except Exception as e:
@@ -110,3 +153,6 @@ while True:
 
     if keyboard.is_pressed('q'):
         break
+
+pred_file.close()
+input_manager.flush()

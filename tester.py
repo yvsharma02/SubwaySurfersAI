@@ -9,52 +9,56 @@ import datetime
 import os
 import numpy as np
 import config
+from PIL import Image
 
-# model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
-# layer_names = [layer.name for layer in model.layers]
-# layer_outputs = [layer.output for layer in model.layers]
-
-# feature_map_model = tf.keras.models.Model(input=model.input, output=layer_outputs)
-# image_path= "generated/downscaled/2024-07-26-23-2-2"
-# img = load_img(image_path, target_size=(150, 150))  
-# input = img_to_array(img)                           
-# input = x.reshape((1,) + x.shape)                   
-# input /= 255.0
-
-
-#custom_train_dataset = CustomDataSet("data/2024-07-21-14-6-6", IM_DIM)
 test_dataset_custom = CustomDataSet(os.path.join(config.DOWNSCALED_DATA_DIR, config.VALIDATION_DATASET))
 
-test_dataset = test_dataset_custom.get_dataset(nothing_skip_rate=0.975).batch(1)
+test_dataset = test_dataset_custom.get_dataset(nothing_skip_rate=config.TEST_DATA_NOTHING_SKIP_RATE).batch(1)
 model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
+
+out_dir = os.path.join(config.TESTER_OUTPUT_DIR, config.PLAY_MODEL, common.date_to_dirname(datetime.datetime.now()))
+
+if (not os.path.exists(out_dir)):
+    os.makedirs(out_dir)
 
 confusion = []
 for i in range(0, 5):
     confusion.append([0] * 5)
 
-#print(confusion[0])
+mislabels = 0
+count = 0
 
-indecisive = 0
+log = open(os.path.join(out_dir, "log.txt"), "w")
 
 for im, label in test_dataset:
     pred = model(im)
     res = np.argmax(pred).item()
-    # if (pred[0][res].numpy().item() < .9):
-    #    indecisive += 1
-    #    continue
-#    print(pred)
-#    print("Classified {} as {}", res, label.numpy().item())
-    confusion[label.numpy().item()][res] += 1
+    label = label.numpy().item()
+    confusion[label][res] += 1
 
+    if (res != label):
+        im_arr = (np.squeeze(im[0, :, :, :, :].numpy()) * 255).astype(np.uint8)
+        images = list(im_arr)
+
+        c = 0
+        for single_image in images:
+            Image.fromarray(single_image).save(os.path.join(out_dir, "{}-{}.png".format(count, c)))
+            c += 1
+    
+        info = "Failed in image: [{}-{}.png]: [{}] expected vs [{}] found.\n".format(count, c - 1, str(common.Action(label)), str(common.Action(res)))
+        print(info)
+        log.write(info)
+        mislabels += 1
+
+    count += 1
+
+
+log.write("\n\n___________CONFSUSION___________\n\n")
 for r in confusion:
     print(r)
-print("Indecisive: ", indecisive)
+    log.write("{}\n".format(r))
 
-# plt.plot(history.history['accuracy'], label='accuracy')
-# plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
-# plt.xlabel('Epoch')
-# plt.ylabel('Accuracy')
-# plt.ylim([0.5, 1])
-# plt.legend(loc='lower right')
+print("Accuracy: {}".format(float(count - mislabels) / float(count)))
+log.write("Accuracy: {}".format(float(count - mislabels) / float(count)))
 
-# plt.show()
+log.close()
