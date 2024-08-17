@@ -79,19 +79,37 @@ def update(count, last_action_time):
         ranks = np.argsort(pred[0])
         diff = pred[0][ranks[-1]] - pred[0][ranks[-2]]
 
-        perform = False
-        predicted_action = Action(np.argmax(pred[0]))
+#        perform = False
+        predicted_action = Action.DO_NOTHING
 
-        first_choice = ranks[-1]
-        second_choice = ranks[-2]
+        # first_choice = ranks[-1]
+        # second_choice = ranks[-2]
 
-        predicted_action = Action(first_choice)
+        vertical_confidence = (pred[0][int(Action.SWIPE_DOWN)] + pred[0][int(Action.SWIPE_UP)])
+        horizontal_confidence = (pred[0][int(Action.SWIPE_LEFT)] + pred[0][int(Action.SWIPE_RIGHT)])
 
-        if (first_choice != int(Action.SWIPE_LEFT) and first_choice != int(Action.SWIPE_RIGHT)):
-            perform = True
-        else:
-            if (pred[0][first_choice] + pred[0][second_choice] >= config.MIN_ACTION_CONFIDENCE[first_choice]):
-                perform = True
+        print("{} vs {}".format(vertical_confidence, horizontal_confidence))
+
+        if (vertical_confidence > config.MIN_VERTICAL_CONFIDENCE):
+            predicted_action = Action.SWIPE_UP if pred[0][int(Action.SWIPE_UP)] > pred[0][int(Action.SWIPE_DOWN)] else Action.SWIPE_DOWN
+        elif (horizontal_confidence > config.MIN_HORIZONTAL_CONFIDENCE):
+            predicted_action = Action.SWIPE_LEFT if pred[0][int(Action.SWIPE_LEFT)] > pred[0][int(Action.SWIPE_RIGHT)] else Action.SWIPE_RIGHT
+#        predicted_action = Action(first_choice)
+
+        # if (first_choice != int(Action.DO_NOTHING)):
+            # if (pred[0][first_choice] > config.MIN_ACTION_CONFIDENCE[first_choice]):
+                # perform = True
+
+        # if ((first_choice == int(Action.SWIPE_LEFT) and second_choice == int(Action.SWIPE_RIGHT)) or (first_choice == int(Action.SWIPE_RIGHT) and second_choice == int(Action.SWIPE_LEFT))):
+        #     if (pred[0][first_choice] + pred[0][second_choice] >= config.MIN_ACTION_CONFIDENCE[first_choice]):
+        #         perform = True
+        # elif ((first_choice == int(Action.SWIPE_DOWN) and second_choice == int(Action.SWIPE_UP)) or (first_choice == int(Action.SWIPE_UP) and second_choice == int(Action.SWIPE_DOWN))):
+        #     if (pred[0][first_choice] + pred[0][second_choice] >= config.MIN_ACTION_CONFIDENCE[first_choice]):
+        #         perform = True
+        # else:
+        #     first_choice = second_choice if first_choice == int(Action.DO_NOTHING) else first_choice
+        #     if (pred[0][first_choice] > config.MIN_ACTION_CONFIDENCE[first_choice]):
+        #         perform = True
 
         # for i in range(0, len(ranks)):
         #     action_ind = ranks[-(i + 1)]
@@ -111,9 +129,12 @@ def update(count, last_action_time):
         #         break
 
         performed = False
-        if (predicted_action != Action.DO_NOTHING and perform and (datetime.datetime.now() - last_action_time).total_seconds() >= config.PLAYER_ACTION_PERFORM_COOLDOWN):
-            performed = True
-            input_manager.perform_action(predicted_action)
+        if (predicted_action != Action.DO_NOTHING):
+            if  ((datetime.datetime.now() - last_action_time).total_seconds() >= config.PLAYER_ACTION_PERFORM_COOLDOWN):
+                performed = True
+                input_manager.perform_action(predicted_action)
+            else:
+                print("Skipping due to cooldown")
 
         info = "Count[{}]:\n{}\n[Max is: {} @ {}]\n[Frame Time: {}]\nPerformed Status: {}\n________________________________________\n\n".format(im_save_count, str(pred), str(Action(ranks[-1])), pred[0][ranks[-1]], time_diff, performed)
         print(info)
