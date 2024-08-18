@@ -35,6 +35,7 @@ context_window_len = 0
 context_window = []
 im_save_count = 0
 lastFrameTime = datetime.datetime.now()
+last_performed_action = Action.DO_NOTHING
 
 out_dir = os.path.join(config.PLAYER_OUTPUT_DIR, config.PLAY_MODEL, common.date_to_dirname(datetime.datetime.now()))
 
@@ -42,9 +43,10 @@ if (not os.path.exists(out_dir)):
     os.makedirs(out_dir)
 
 pred_file = open(os.path.join(out_dir, "pred.txt"), "w")
+frames_since_last_action = config.PLAYER_ACTION_WAIT_FRAMES
 
 def update(count, last_action_time):
-    global context_window_len, lastFrameTime, im_save_count
+    global context_window_len, lastFrameTime, im_save_count, frames_since_last_action, last_performed_action
     if (last_action_time == None):
         last_action_time = datetime.datetime.now()
     try:
@@ -130,18 +132,23 @@ def update(count, last_action_time):
 
         performed = False
         if (predicted_action != Action.DO_NOTHING):
-            if  ((datetime.datetime.now() - last_action_time).total_seconds() >= config.PLAYER_ACTION_PERFORM_COOLDOWN):
+            if  (last_performed_action != predicted_action or frames_since_last_action >= config.PLAYER_ACTION_WAIT_FRAMES):
                 performed = True
+                last_performed_action = predicted_action
                 input_manager.perform_action(predicted_action)
             else:
                 print("Skipping due to cooldown")
 
-        info = "Count[{}]:\n{}\n[Max is: {} @ {}]\n[Frame Time: {}]\nPerformed Status: {}\n________________________________________\n\n".format(im_save_count, str(pred), str(Action(ranks[-1])), pred[0][ranks[-1]], time_diff, performed)
+        info = "Count[{}]:\n{}\n[Max is: {} @ {}]\n[Performing: {}]\n[Frame Time: {}]\nPerformed Status: {}\n________________________________________\n\n".format(im_save_count, str(pred), str(Action(ranks[-1])), pred[0][ranks[-1]], str(predicted_action), time_diff, performed)
         print(info)
         pred_file.write(info)
 
         if (performed):
+            frames_since_last_action = 0
             return datetime.datetime.now()
+        else:
+
+            frames_since_last_action += 1
         return last_action_time
 #            time.sleep(config.PLAYER_ACTION_PERFORM_COOLDOWN)
 
