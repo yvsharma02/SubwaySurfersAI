@@ -1,60 +1,44 @@
-CAPTURE_LTRB_OFFSET = (9, 38, -9, -9)
-#The data may be saved correctly, but I think it's being read as it's transpose. Saving uses (width, height) tensorflow uses (height, width)
-INPUT_IMAGE_DIMENSIONS = (172, 80)
-
-SEQUENCE_LEN = 4
-
-TRAINING_IMAGE_DIMENSIONS = INPUT_IMAGE_DIMENSIONS + tuple([3])
-TRAINNIG_DATA_DIMENSIONS = tuple([SEQUENCE_LEN]) + TRAINING_IMAGE_DIMENSIONS
-
-EPOCH = 20
-BATCH_SIZE = 32
-#NOTHING_SKIP_RATE = 0.985
-#MIN_DELAY_BETWEEN_ACTIONS_MS = 100
-MAX_RUN_SIZE = 1500
-
-SCREEN_NAME = "Android Emulator - Pixel_4a_API_33:5554"
+from dataset_definition import DatasetDefinition
+import tensorflow as tf
+from keras import models
+import os
 
 ORIGINAL_DATA_DIR = "generated/data/original"
-DOWNSCALED_DATA_DIR = "generated/data/downscaled"
-MODEL_OUTPUT_DIR = "generated/output/"
-PLAYER_OUTPUT_DIR = "generated/player/"
-TESTER_OUTPUT_DIR = "generated/tester/"
 
-TRAINING_FRACTION = 0.1
-#2024-08-11-19-12-12
-VALIDATION_DATASET = "2024-08-15-16-47-47"
-PLAY_MODEL = "2024-08-18-17-42-42"
-
-#SHUFFLE_BUFFER_SIZE = 5
-
-FPS_LOCK = 100000000000
-
-END_TRIM_COUT = 20
-
-#ACTION_HOLD_FRAME_COUT = 3
-#UP_EXTRA_HOLD_TIME = 3
-
-TARGET_FPS = 8
-#TODO: Increase to .96 or 97
-TEST_DATA_NOTHING_SKIP_RATE = .25
-TRAIN_DATA_NOTHING_SKIP_RATE = .9075
-# MIN_PLAYER_CONFIDENCE = 0.95
-
-
-PLAYER_ACTION_WAIT_FRAMES = 4
-#PLAYER_ACTION_PERFORM_COOLDOWN = .385
 DATA_GEN_ACTION_PERFORM_COOLDOWN = .25
 STD_OUT_FOR_SUBPROCESS = "stdout.txt"
 
-MIN_VERTICAL_CONFIDENCE = 0.45
-MIN_HORIZONTAL_CONFIDENCE = .7
+class ModelConfig:
+    # Should be set automatically. Maps to file name.
+    model_name : str = None
+    model_architecture_name : str = None
 
-#index matches with Action
-# MIN_ACTION_CONFIDENCE = [
-#     0.20,
-#     0.20,
-#     0.75,
-#     0.75,
-#     .95
-# ]
+    input_image_dimension : tuple = None
+    sequence_length : int = None
+    epoch : int = None
+    batch_size : int = None
+    testing_fraction : float = None
+
+    train_set_name : str
+
+    validation_sets : list[str]
+
+    # sequence len x height x width x 3
+    def get_final_input_shape(self) -> tuple:
+        return tuple([self.sequence_length]) + self.input_image_dimension + tuple([3])
+
+class PlayerConfig:
+
+    # Should be set automatically. Maps to file name.
+    player_name = None
+
+    model_name = None
+    
+    same_action_wait_frames = None
+    min_vertical_confidence = None
+    min_horizontal_confidence = None
+
+    target_fps = None
+
+    def get_model_config() -> ModelConfig:
+        return None

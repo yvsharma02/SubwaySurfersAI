@@ -4,6 +4,7 @@ import dxcam
 from ctypes import windll
 from PIL import Image
 import config
+import global_config
 
 class ScreenRecorder:
 
@@ -17,10 +18,10 @@ class ScreenRecorder:
 
     def capture(self):
         try:
-            region = (self.left + config.CAPTURE_LTRB_OFFSET[0],
-                    self.top + config.CAPTURE_LTRB_OFFSET[1],
-                    self.right + config.CAPTURE_LTRB_OFFSET[2],
-                    self.bot + config.CAPTURE_LTRB_OFFSET[3])
+            region = (self.left + global_config.CAPTURE_LTRB_OFFSET[0],
+                    self.top + global_config.CAPTURE_LTRB_OFFSET[1],
+                    self.right + global_config.CAPTURE_LTRB_OFFSET[2],
+                    self.bot + global_config.CAPTURE_LTRB_OFFSET[3])
             frame = self.camera.grab(region = region)
             return frame
         except:

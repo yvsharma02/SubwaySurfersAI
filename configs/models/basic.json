@@ -1,0 +1,9 @@
+{
+    "model_architecture_name": "a1",
+    "input_image_dimension": [170, 82],
+    "sequence_length": 3,
+    "epoch": 15,
+    "batch_size": 15,
+    "train_set_name": "complete",
+    "validation_sets" : ["v1", "v2"]
+}

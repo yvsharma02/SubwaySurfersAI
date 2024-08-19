@@ -3,12 +3,14 @@ import config
 import keyboard
 import common
 import os
+import global_config
 
 from input_manager import InputManager
 from common import Action
 from recorder import ScreenRecorder
 
-recorder = ScreenRecorder(config.SCREEN_NAME)
+recorder = ScreenRecorder(global_config
+.SCREEN_NAME)
 input_manager = InputManager(recorder)
 
 frame_duration = 1.0 / config.TARGET_FPS
