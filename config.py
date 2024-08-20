@@ -1,8 +1,3 @@
-from dataset_definition import DatasetDefinition
-import tensorflow as tf
-from keras import models
-import os
-
 ORIGINAL_DATA_DIR = "generated/data/original"
 
 DATA_GEN_ACTION_PERFORM_COOLDOWN = .25
@@ -25,7 +20,7 @@ class ModelConfig:
 
     # sequence len x height x width x 3
     def get_final_input_shape(self) -> tuple:
-        return tuple([self.sequence_length]) + self.input_image_dimension + tuple([3])
+        return tuple([self.sequence_length]) + tuple(self.input_image_dimension) + tuple([3])
 
 class PlayerConfig:
 

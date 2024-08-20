@@ -11,6 +11,9 @@ MODELS_CONFIG_DIR = "configs/models"
 ORIGINAL_DATA_DIR = "generated/data/original"
 DOWNSCALED_DIR = "generated/data/downscaled"
 
+DATASET_JSON_OUT_FILE = "generated/utils/datasets.json"
+ARCH_JSON_OUT_DIR = "generated/utils/"
+
 resultant_models_root = "generated/output/"
 
 def get_model_train_out_dir(model_name : str):

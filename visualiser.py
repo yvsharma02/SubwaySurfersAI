@@ -20,8 +20,6 @@ model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.
 conv_layers = [i for i in range(0, len(model.layers)) if model.layers[i].name.startswith("conv2d")]
 outputs = [model.layers[i].output for i in conv_layers]
 model_vis = keras.Model(inputs=model.inputs, outputs=outputs)
-# print(conv_layers)
-# print(outputs)
 
 def im_loader(path):
     raw = tf.io.read_file(path)
@@ -38,10 +36,6 @@ print(im.shape)
 # plt.show()
 
 out = model_vis.predict(im)
-#print(out[0].shape)
-# print(out[0].shape)
-# print(out[1].shape)
-# print(len(out))
 
 layer_count = 0
 for layer in out:
@@ -51,19 +45,6 @@ for layer in out:
     im_count = 0
     for im in images:
         path = "generated/visualiser/{layerno}/Filter-{filterno}".format(layerno=layer_count, filterno=im_count) + ".png"
-#        print(path)
         cv2.imwrite(path, 255*im.numpy())
         im_count += 1
     layer_count += 1
-
-
-#out = tf.squeeze(out[0], axis = 0)
-#print(out.shape)
-#out = tf.split(out, num_or_size_splits=32, axis=-1)
-#print(out[0])
-
-# for i in range(0, 32):
-# #    cv2.imshow("im", out[i].numpy())
-# #    cv2.waitKey()
-#     cv2.imwrite("generated/visualiser/CF-" + str(i) + ".png", 255*out[i].numpy())
-#model_trim = keras.models.Model(input=[])

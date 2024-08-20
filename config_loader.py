@@ -3,6 +3,7 @@ import os
 import global_config
 import config
 import dataset_definition
+import architectures
 
 def load_json(path : str):
     with (open(path, "r") as file):
@@ -12,18 +13,13 @@ def save_json(path: str, obj):
     with (open(path, "w") as file):
         file.write(json.dumps(obj.__dict__))
 
-architectures = {}
 models_config = {}
 datasets_config = {}
 players_config = {}
 
 def load_configs():
 
-    global architectures, models_config, datasets_config, players_config
-
-    for arch in os.listdir(global_config.ARCHITECTURES_CONFIG_DIR):
-        with (open(os.path.join(global_config.ARCHITECTURES_CONFIG_DIR, arch)) as file):
-            architectures[arch.removesuffix('.json')] = file.read()
+    global models_config, datasets_config, players_config
 
     for tc in os.listdir(global_config.MODELS_CONFIG_DIR):
         name = tc.removesuffix('.json')
@@ -53,8 +49,8 @@ def get_dataset(name : str) -> dataset_definition.DatasetDefinition:
 def get_player_config(name : str) -> config.PlayerConfig:
     return players_config[name]
 
-def get_model_arch_json(name : str) -> str:
-    return players_config[name]
+def get_model_generator(name : str) -> str:
+    return architectures.architecture_generator_map[name]
 
 def get_all_train_models():
     return models_config.keys()

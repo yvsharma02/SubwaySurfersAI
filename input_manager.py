@@ -31,7 +31,6 @@ class InputManager:
     def perform_action(self, action, count = -1, captures_dir = "", record = False):
         saved = False
 
-#        print(config.NOTHING_SKIP_RATE)
         image = None
         if (record):
             image = self.screen_recorder.capture()
@@ -39,7 +38,6 @@ class InputManager:
         cmd = self.input_cmd_map[action]
         
         if (cmd):
-#            print("Performing: {}".format(cmd))
             self.shell.stdin.write("{}\n".format(cmd))
             self.shell.stdin.flush()
             print("Performed: {}".format(cmd))
