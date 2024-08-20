@@ -1,14 +1,14 @@
-import config
+import configs
 import os
 from PIL import Image
-from common import Action
+from action import Action
 import shutil
-import global_config
-import dataset_definition
+import settings
+import custom_dataset
 
 def downscale(dataset_dir, height : int, width : int, mirror = True, replace = False):
-    downscaled_dir = os.path.join(global_config.DOWNSCALED_DIR, "{}x{}".format(height, width), dataset_dir)
-    og_dir = os.path.join(global_config.ORIGINAL_DATA_DIR, dataset_dir)
+    downscaled_dir = os.path.join(settings.DOWNSCALED_DIR, "{}x{}".format(height, width), dataset_dir)
+    og_dir = os.path.join(settings.ORIGINAL_DATA_DIR, dataset_dir)
     if (os.path.exists(downscaled_dir) and not replace):
         return
 
@@ -37,7 +37,7 @@ def downscale(dataset_dir, height : int, width : int, mirror = True, replace = F
                 txt = txt.replace(" " + str(int(Action.SWIPE_LEFT)) + "; ", "*")
                 txt = txt.replace(" " + str(int(Action.SWIPE_RIGHT)) + "; ", " " + str(int(Action.SWIPE_LEFT)) + "; ")
                 txt = txt.replace("*", " " + str(int(Action.SWIPE_RIGHT)) + "; ")
-                save_dir = os.path.join(global_config.DOWNSCALED_DIR, "{}x{}".format(height, width), dataset_dir + " - reversed")
+                save_dir = os.path.join(settings.DOWNSCALED_DIR, "{}x{}".format(height, width), dataset_dir + " - reversed")
                 os.mkdir(save_dir)
                 lines = txt.splitlines()
 

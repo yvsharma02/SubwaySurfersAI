@@ -1,26 +1,26 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-import dataset_definition
+import custom_dataset
 import action
 import os
 import numpy as np
-import config
+import configs
 from PIL import Image
-import global_config
-import config_loader
+import settings
+import config_manager
 
-def test(train_config : config.ModelConfig):
-    validation_sets : list[dataset_definition.CustomDataset] = [config_loader.get_dataset(key) for key in train_config.validation_sets]
+def test(train_config : configs.ModelConfig):
+    validation_sets : list[custom_dataset.CustomDataset] = [config_manager.get_dataset(key) for key in train_config.validation_sets]
 
-    model = tf.keras.models.load_model(os.path.join(global_config.get_model_train_out_dir(train_config.model_name), "model.keras"))
+    model = tf.keras.models.load_model(os.path.join(settings.get_model_train_out_dir(train_config.model_name), "model.keras"))
 
     for valid in validation_sets:
         valid.load_path_label_pairs(train_config.input_image_dimension[0], train_config.input_image_dimension[1])
-        test_dataset = dataset_definition.to_tf_dataset(valid, train_config.sequence_length
+        test_dataset = custom_dataset.to_tf_dataset(valid, train_config.sequence_length
         , train_config.input_image_dimension + [3]).batch(1)
 
-        out_dir = global_config.get_model_test_result_dir(train_config.model_name, valid.dataset_name)
+        out_dir = settings.get_model_test_result_dir(train_config.model_name, valid.dataset_name)
 
         if (not os.path.exists(out_dir)):
             os.makedirs(out_dir)

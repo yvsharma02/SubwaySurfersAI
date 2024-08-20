@@ -1,16 +1,16 @@
 from recorder import ScreenRecorder
 from input_manager import InputManager
-from common import Action
+from action import Action
 import datetime
 import os
 import numpy as np
-import config
+import configs
 
-import common
-import global_config
+import action
+import settings
 import keyboard
 import time
-import global_config
+import settings
 
 from PIL import Image
 from keras import models
@@ -18,18 +18,18 @@ from keras import models
 import tensorflow as tf
 #from keras import models, layers, losses
 
-def start_player(player_config : config.PlayerConfig):
+def start_player(player_config : configs.PlayerConfig):
 
-    recorder = ScreenRecorder(global_config.SCREEN_NAME)
+    recorder = ScreenRecorder(settings.SCREEN_NAME)
     input = InputManager(recorder)
 
     context_window = []
     im_save_count = 0
 
-    out_dir = os.path.join(global_config.get_model_player_result_dir(player_config.model_name, player_config.player_name), 
-            common.date_to_dirname(datetime.datetime.now()))
+    out_dir = os.path.join(settings.get_model_player_result_dir(player_config.model_name, player_config.player_name), 
+            action.date_to_dirname(datetime.datetime.now()))
 
-    model = models.models.load_model(os.path.join(global_config.get_model_test_result_dir(player_config.model_name), "model.keras"))
+    model = models.models.load_model(os.path.join(settings.get_model_test_result_dir(player_config.model_name), "model.keras"))
     pred_file = open(os.path.join(out_dir, "pred.txt"), "w")
 
     last_performed_action = Action.DO_NOTHING
@@ -45,7 +45,7 @@ def start_player(player_config : config.PlayerConfig):
         im_save_count += 1
         im.save(os.path.join(out_dir, str(im_save_count) + ".png"))
 
-        tensor = np.asarray(im, dtype=np.float32).reshape(config.TRAINING_IMAGE_DIMENSIONS)
+        tensor = np.asarray(im, dtype=np.float32).reshape(configs.TRAINING_IMAGE_DIMENSIONS)
         tensor = tensor / 255
 
         context_window.append(tensor)

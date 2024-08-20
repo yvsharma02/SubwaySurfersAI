@@ -3,8 +3,8 @@ import win32ui
 import dxcam
 from ctypes import windll
 from PIL import Image
-import config
-import global_config
+import configs
+import settings
 
 class ScreenRecorder:
 
@@ -18,10 +18,10 @@ class ScreenRecorder:
 
     def capture(self):
         try:
-            region = (self.left + global_config.CAPTURE_LTRB_OFFSET[0],
-                    self.top + global_config.CAPTURE_LTRB_OFFSET[1],
-                    self.right + global_config.CAPTURE_LTRB_OFFSET[2],
-                    self.bot + global_config.CAPTURE_LTRB_OFFSET[3])
+            region = (self.left + settings.CAPTURE_LTRB_OFFSET[0],
+                    self.top + settings.CAPTURE_LTRB_OFFSET[1],
+                    self.right + settings.CAPTURE_LTRB_OFFSET[2],
+                    self.bot + settings.CAPTURE_LTRB_OFFSET[3])
             frame = self.camera.grab(region = region)
             return frame
         except:

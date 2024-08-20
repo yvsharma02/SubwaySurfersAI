@@ -1,19 +1,19 @@
 import datetime
-import config
+import configs
 import keyboard
-import common
+import action
 import os
-import global_config
+import settings
 
 from input_manager import InputManager
-from common import Action
+from action import Action
 from recorder import ScreenRecorder
 
-recorder = ScreenRecorder(global_config
+recorder = ScreenRecorder(settings
 .SCREEN_NAME)
 input_manager = InputManager(recorder)
 
-frame_duration = 1.0 / global_config.RECORD_FPS
+frame_duration = 1.0 / settings.RECORD_FPS
 record_count = 0
 
 def fixed_rate_update(count, keypress_cooldown_time_remaining):
@@ -38,7 +38,7 @@ def check_for_actions(count, keypress_cooldown_time_remaining, record_nothing = 
 
     action = keypress_to_action()
 
-    after_keypress_cooldown = keypress_cooldown_time_remaining > global_config.DATA_GEN_ACTION_PERFORM_COOLDOWN
+    after_keypress_cooldown = keypress_cooldown_time_remaining > settings.DATA_GEN_ACTION_PERFORM_COOLDOWN
 
     if (action == Action.DO_NOTHING):
         if (record_nothing):
@@ -66,7 +66,7 @@ while True:
 
     record_count = 0
     
-    out_dir = os.path.join(global_config.ORIGINAL_DATA_DIR, common.date_to_dirname(datetime.datetime.now()))
+    out_dir = os.path.join(settings.ORIGINAL_DATA_DIR, action.date_to_dirname(datetime.datetime.now()))
     if (not os.path.exists(out_dir)):
         os.makedirs(out_dir)
 
@@ -78,7 +78,7 @@ while True:
 
         performed = False
 
-        if cooldown_time_remaining >= global_config.DATA_GEN_ACTION_PERFORM_COOLDOWN:
+        if cooldown_time_remaining >= settings.DATA_GEN_ACTION_PERFORM_COOLDOWN:
             if elapsed_time >= frame_duration:
                 record_count, performed = fixed_rate_update(record_count, cooldown_time_remaining)
                 last_frame_time = current_time

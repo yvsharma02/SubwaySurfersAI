@@ -9,3 +9,4 @@ class Action(IntEnum):
     SWIPE_LEFT = 2,
     SWIPE_RIGHT = 3
     DO_NOTHING = 4
+    

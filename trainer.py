@@ -2,15 +2,15 @@ from keras import models, callbacks
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-import dataset_definition
+import custom_dataset
 import os
 
-import config_loader
-import config
-import global_config
+import config_manager
+import configs
+import settings
 
-def train(train_config : config.ModelConfig):
-    out_dir = global_config.get_model_train_out_dir(train_config.model_name)
+def train(train_config : configs.ModelConfig):
+    out_dir = settings.get_model_train_out_dir(train_config.model_name)
 
     if (not os.path.exists(out_dir)):
         os.makedirs(out_dir)
@@ -20,12 +20,12 @@ def train(train_config : config.ModelConfig):
             self.model.save(os.path.join(out_dir, "model_epoch_{}.keras".format(epoch)))
 
     print("Final Input Shape: {}".format(train_config.get_final_input_shape()))
-    model = config_loader.get_model_generator(train_config.model_architecture_name)(train_config.get_final_input_shape())
+    model = config_manager.get_model_generator(train_config.model_architecture_name)(train_config.get_final_input_shape())
 
-    train_set = config_loader.get_dataset(train_config.train_set_name)
+    train_set = config_manager.get_dataset(train_config.train_set_name)
     train_set.load_path_label_pairs(train_config.input_image_dimension[0], train_config.input_image_dimension[1])
 
-    data = dataset_definition.to_tf_dataset(train_set, train_config.sequence_length, train_config.input_image_dimension + [3])
+    data = custom_dataset.to_tf_dataset(train_set, train_config.sequence_length, train_config.input_image_dimension + [3])
     data = data.prefetch(buffer_size=tf.data.experimental.AUTOTUNE).batch(batch_size=train_config.batch_size)
     test_batch_count = int(len(data) * train_config.testing_fraction)
 

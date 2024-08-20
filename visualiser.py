@@ -1,13 +1,13 @@
 from recorder import ScreenRecorder
 from input_manager import InputManager
-from common import Action
-import common
+from action import Action
+import action
 import datetime
 import keyboard
 import os
 import numpy as np
 import keras
-import config
+import configs
 import time
 import matplotlib.pyplot as plt
 
@@ -15,7 +15,7 @@ import cv2
 import tensorflow as tf
 #from keras import models, layers, losses
 
-model = tf.keras.models.load_model(os.path.join(config.MODEL_OUTPUT_DIR, config.PLAY_MODEL, "model.keras"))
+model = tf.keras.models.load_model(os.path.join(configs.MODEL_OUTPUT_DIR, configs.PLAY_MODEL, "model.keras"))
 
 conv_layers = [i for i in range(0, len(model.layers)) if model.layers[i].name.startswith("conv2d")]
 outputs = [model.layers[i].output for i in conv_layers]

@@ -1,13 +1,14 @@
 from action import Action
 
-import config
+import configs
 import os
 import tensorflow as tf
 import random
-import global_config
+import settings
 import downscaler
 
-class CustomDataset:
+class CustomDatase
+t:
 
     dataset_name : str = None
     nothing_skip_rate = None
@@ -29,8 +30,8 @@ class CustomDataset:
             print("Downscaling: {}/{}".format(i + 1, len(self.datasets)))
             downscaler.downscale(self.datasets[i][0], height, width, self.datasets[i][3], False)
 
-        complete_dirs = [(os.path.join(global_config.DOWNSCALED_DIR, "{}x{}".format(height, width), ds[0]), ds[1], ds[2]) for ds in self.datasets]
-        complete_dirs = complete_dirs + [(os.path.join(global_config.DOWNSCALED_DIR, "{}x{}".format(height, width), ds[0] + " - reversed"), ds[1], ds[2]) for ds in self.datasets if ds[3] == True]
+        complete_dirs = [(os.path.join(settings.DOWNSCALED_DIR, "{}x{}".format(height, width), ds[0]), ds[1], ds[2]) for ds in self.datasets]
+        complete_dirs = complete_dirs + [(os.path.join(settings.DOWNSCALED_DIR, "{}x{}".format(height, width), ds[0] + " - reversed"), ds[1], ds[2]) for ds in self.datasets if ds[3] == True]
         self.path_label_pair = []
 
         for ds in complete_dirs:

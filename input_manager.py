@@ -1,9 +1,9 @@
-from common import Action
+from action import Action
 from recorder import ScreenRecorder
 import os
 import datetime
 import random
-import config
+import configs
 import numpy as np
 from PIL import Image
 from subprocess import Popen, PIPE
@@ -24,7 +24,7 @@ class InputManager:
 
     def __init__(self, screen_recorder):
         self.screen_recorder = screen_recorder
-        self.out = open(config.STD_OUT_FOR_SUBPROCESS, "w")
+        self.out = open(configs.STD_OUT_FOR_SUBPROCESS, "w")
         self.shell = Popen(['cmd.exe'], stdin=PIPE, stdout=self.out, text=True)
 
 

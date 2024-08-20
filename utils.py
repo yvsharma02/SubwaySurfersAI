@@ -1,5 +1,5 @@
 import os
-import global_config
+import settings
 import tensorflow as tf
 from keras import models, layers, losses
 
@@ -43,7 +43,7 @@ def get_architecture() -> models.Model:
     return model
 
 def generate_dataset_list(mirrors = True, end_trim = 25):
-    dirs = os.listdir(global_config.ORIGINAL_DATA_DIR)
+    dirs = os.listdir(settings.ORIGINAL_DATA_DIR)
 
     format = "[ \"{}\", [0, {}], [], {} ],"
 
@@ -52,5 +52,5 @@ def generate_dataset_list(mirrors = True, end_trim = 25):
             file.write(format.format(dir, end_trim, "true" if mirrors else "false"))
 
 def architecture_json(name : str):
-    with open(os.path.join(global_config.ARCH_JSON_OUT_DIR, name + ".json"), "w") as file:
+    with open(os.path.join(settings.ARCH_JSON_OUT_DIR, name + ".json"), "w") as file:
        file.write(get_architecture().to_json())
