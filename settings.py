@@ -1,5 +1,11 @@
 import os
 
+DATA_GEN_ACTION_PERFORM_COOLDOWN = .25
+STD_OUT_FOR_SUBPROCESS = "stdout.txt"
+ORIGINAL_DATA_DIR = "generated/data/original"
+
+RECORD_FPS = 8
+
 CAPTURE_LTRB_OFFSET = (9, 38, -9, -9)
 SCREEN_NAME = "Android Emulator - Pixel_4a_API_33:5554"
 

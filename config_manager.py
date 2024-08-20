@@ -29,7 +29,7 @@ def load_configs():
 
     for dc in os.listdir(global_config.DATASETS_CONFIG_DIR):
         name = dc.removesuffix('.json')
-        datasets_config[name] = dataset_definition.DatasetDefinition()
+        datasets_config[name] = dataset_definition.CustomDataset()
         datasets_config[name].__dict__.update(load_json(os.path.join(global_config.DATASETS_CONFIG_DIR, dc)))
         datasets_config[name].dataset_name = name
 
@@ -43,7 +43,7 @@ def load_configs():
 def get_model_config(name : str) -> config.ModelConfig:
     return models_config[name]
 
-def get_dataset(name : str) -> dataset_definition.DatasetDefinition:
+def get_dataset(name : str) -> dataset_definition.CustomDataset:
     return datasets_config[name]
 
 def get_player_config(name : str) -> config.PlayerConfig:

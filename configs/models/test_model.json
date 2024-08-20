@@ -1,0 +1,10 @@
+{
+    "model_architecture_name": "test_arch",
+    "input_image_dimension": [170, 82],
+    "sequence_length": 5,
+    "epoch": 3,
+    "batch_size": 1,
+    "train_set_name": "complete",
+    "validation_sets" : ["v1", "v2"],
+    "testing_fraction": 0.1
+}

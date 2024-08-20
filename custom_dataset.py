@@ -1,4 +1,4 @@
-from common import Action
+from action import Action
 
 import config
 import os
@@ -7,7 +7,7 @@ import random
 import global_config
 import downscaler
 
-class DatasetDefinition:
+class CustomDataset:
 
     dataset_name : str = None
     nothing_skip_rate = None
@@ -57,7 +57,7 @@ class DatasetDefinition:
         self.path_label_pair = []
         self.currently_loaded_dimensions = None
 
-def to_tf_dataset(dataset : DatasetDefinition, sequence_length : int, img_res : tuple) -> tf.data.Dataset:
+def to_tf_dataset(dataset : CustomDataset, sequence_length : int, img_res : tuple) -> tf.data.Dataset:
 
     def convert_path_to_image(img_path, label):
         def load_img(path):

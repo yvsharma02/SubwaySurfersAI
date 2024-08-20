@@ -2,7 +2,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 import dataset_definition
-import common
+import action
 import os
 import numpy as np
 import config
@@ -11,7 +11,7 @@ import global_config
 import config_loader
 
 def test(train_config : config.ModelConfig):
-    validation_sets : list[dataset_definition.DatasetDefinition] = [config_loader.get_dataset(key) for key in train_config.validation_sets]
+    validation_sets : list[dataset_definition.CustomDataset] = [config_loader.get_dataset(key) for key in train_config.validation_sets]
 
     model = tf.keras.models.load_model(os.path.join(global_config.get_model_train_out_dir(train_config.model_name), "model.keras"))
 
@@ -52,7 +52,7 @@ def test(train_config : config.ModelConfig):
                     Image.fromarray(single_image).save(os.path.join(out_dir, "{}-{}.png".format(count, c)))
                     c += 1
             
-                info = "Failed in image: [{}-{}.png]: [{}] expected vs [{}] found.\n".format(count, c - 1, str(common.Action(label)), str(common.Action(res)))
+                info = "Failed in image: [{}-{}.png]: [{}] expected vs [{}] found.\n".format(count, c - 1, str(action.Action(label)), str(action.Action(res)))
                 print(info)
                 log.write(info)
                 mislabels += 1

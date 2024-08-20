@@ -1,8 +1,3 @@
-ORIGINAL_DATA_DIR = "generated/data/original"
-
-DATA_GEN_ACTION_PERFORM_COOLDOWN = .25
-STD_OUT_FOR_SUBPROCESS = "stdout.txt"
-
 class ModelConfig:
     # Should be set automatically. Maps to file name.
     model_name : str = None
