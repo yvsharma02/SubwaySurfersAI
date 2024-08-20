@@ -67,13 +67,11 @@ def to_tf_dataset(dataset : DatasetDefinition, sequence_length : int, img_res : 
             tensor = tf.reshape(tensor, shape=img_res)
             return tensor
         
-        print(img_path, label)
         images = tf.map_fn(load_img, img_path, dtype=tf.float32)
         return images, label
 
     data = []
     labels = []
-#    print(dataset.path_label_pair)
     nothing_indices = [i for i in range(sequence_length, len(dataset.path_label_pair)) if dataset.path_label_pair[i][1] == int(Action.DO_NOTHING)]
 
     keep_count = int(len(nothing_indices) * (1.0 - dataset.nothing_skip_rate))
@@ -92,7 +90,5 @@ def to_tf_dataset(dataset : DatasetDefinition, sequence_length : int, img_res : 
         labels.append(dataset.path_label_pair[last_index][1])
 
     dataset = tf.data.Dataset.from_tensor_slices((data, labels))
-    print("x-x-x-x-x-x")
-    print(data)
     dataset = dataset.map(convert_path_to_image, num_parallel_calls=tf.data.AUTOTUNE)
     return dataset

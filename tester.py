@@ -11,14 +11,12 @@ import global_config
 import config_loader
 
 def test(train_config : config.ModelConfig):
-    print(train_config.validation_sets)
     validation_sets : list[dataset_definition.DatasetDefinition] = [config_loader.get_dataset(key) for key in train_config.validation_sets]
 
     model = tf.keras.models.load_model(os.path.join(global_config.get_model_train_out_dir(train_config.model_name), "model.keras"))
 
     for valid in validation_sets:
         valid.load_path_label_pairs(train_config.input_image_dimension[0], train_config.input_image_dimension[1])
-        print(valid.path_label_pair)
         test_dataset = dataset_definition.to_tf_dataset(valid, train_config.sequence_length
         , train_config.input_image_dimension + [3]).batch(1)
 
@@ -26,6 +24,9 @@ def test(train_config : config.ModelConfig):
 
         if (not os.path.exists(out_dir)):
             os.makedirs(out_dir)
+        else:
+            print("[{}] already tested on [{}]. Skipping.".format(train_config.model_name, valid.dataset_name))
+            continue
 
         confusion = []
         for i in range(0, 5):
