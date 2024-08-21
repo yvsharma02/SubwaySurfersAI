@@ -27,6 +27,7 @@ class PlayerConfig:
     same_action_wait_frames = None
     min_vertical_confidence = None
     min_horizontal_confidence = None
+    min_nothing_confidence = None
 
     target_fps = None
 

@@ -1,6 +1,5 @@
 import os
 import settings
-import tensorflow as tf
 from keras import models, layers, losses
 
 def get_architecture() -> models.Model:
@@ -42,12 +41,12 @@ def get_architecture() -> models.Model:
 
     return model
 
-def generate_dataset_list(mirrors = True, end_trim = 25):
+def generate_dataset_list(mirrors = True, end_trim = 50):
     dirs = os.listdir(settings.ORIGINAL_DATA_DIR)
 
     format = "[ \"{}\", [0, {}], [], {} ],"
 
-    with open("generated/utils/datasets.json", "w") as file:
+    with open(settings.DATASET_JSON_OUT_FILE, "w") as file:
         for dir in dirs:
             file.write(format.format(dir, end_trim, "true" if mirrors else "false"))
 

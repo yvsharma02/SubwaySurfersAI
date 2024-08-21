@@ -7,8 +7,7 @@ import random
 import settings
 import downscaler
 
-class CustomDatase
-t:
+class CustomDataset:
 
     dataset_name : str = None
     nothing_skip_rate = None
@@ -38,7 +37,7 @@ t:
             ignore_indices = ds[2]
             trim_limits = ds[1]
             with open(os.path.join(ds[0], "commands.txt")) as f:
-                lines = f.readlines()[trim_limits[0]:trim_limits[1]]
+                lines = f.readlines()[trim_limits[0]:-trim_limits[1]]
 
                 for line in lines:
                     line = line.replace(' ', '')

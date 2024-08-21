@@ -1,5 +1,6 @@
 {
-    "nothing_skip_rate": 0.90,
+
+    "nothing_skip_rate": 0.7,
     "datasets": [
         [
             "2024-08-10-12-21-21",
@@ -8,7 +9,7 @@
                 25
             ],
             [],
-            true
+            false
         ]
     ]
 }

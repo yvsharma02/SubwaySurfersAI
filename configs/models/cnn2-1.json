@@ -1,0 +1,10 @@
+{
+    "model_architecture_name": "cnn2-1",
+    "input_image_dimension": [170, 82],
+    "sequence_length": 3,
+    "epoch": 13,
+    "batch_size": 32,
+    "train_set_name": "complete",
+    "validation_sets" : ["validation"],
+    "testing_fraction": 0.1
+}

@@ -8,8 +8,17 @@ import os
 import config_manager
 import configs
 import settings
+import action
+import datetime
+
+global_plot_path = os.path.join(settings.GLOBAL_PLOT_DIR, action.date_to_dirname(datetime.datetime.now()) + ".png")
+if (not os.path.exists(settings.GLOBAL_PLOT_DIR)):
+    os.makedirs(global_plot_path)
 
 def train(train_config : configs.ModelConfig):
+
+    global global_plot_path
+
     out_dir = settings.get_model_train_out_dir(train_config.model_name)
 
     if (not os.path.exists(out_dir)):
@@ -17,7 +26,7 @@ def train(train_config : configs.ModelConfig):
 
     class CallbackHandler(callbacks.Callback):
         def on_epoch_end(self, epoch, logs):
-            self.model.save(os.path.join(out_dir, "model_epoch_{}.keras".format(epoch)))
+            self.model.save(os.path.join(out_dir, "epoches", "model_epoch_{}.keras".format(epoch)))
 
     print("Final Input Shape: {}".format(train_config.get_final_input_shape()))
     model = config_manager.get_model_generator(train_config.model_architecture_name)(train_config.get_final_input_shape())
@@ -51,13 +60,25 @@ def train(train_config : configs.ModelConfig):
         file.write("\n__________________________\n")
         model.summary(print_fn=lambda x: file.write(x + '\n'))
 
-    plt.plot(history.history['accuracy'], label='accuracy')
-    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    this_model_fig = plt.figure()
+    ax = this_model_fig.add_subplot(1, 1, 1)
+
+    ax.plot(history.history['accuracy'], label='{}-accuracy'.format(train_config.model_name))
+    ax.plot(history.history['val_accuracy'], label = '{}-val_accuracy'.format(train_config.model_name))
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Accuracy')
+    ax.set_ylim([0.5, 1])
+    ax.legend(loc='lower right')
+
+    this_model_fig.savefig(os.path.join(out_dir, 'history.png'))
+
+    plt.plot(history.history['accuracy'], label='{}-accuracy'.format(train_config.model_name))
+    plt.plot(history.history['val_accuracy'], label = '{}-val_accuracy'.format(train_config.model_name))
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.ylim([0.5, 1])
     plt.legend(loc='lower right')
 
-    plt.savefig(os.path.join(out_dir, 'history.png'))
+    plt.savefig(global_plot_path)
 
     return model

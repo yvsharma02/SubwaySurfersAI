@@ -4,12 +4,15 @@ DATA_GEN_ACTION_PERFORM_COOLDOWN = .25
 STD_OUT_FOR_SUBPROCESS = "stdout.txt"
 ORIGINAL_DATA_DIR = "generated/data/original"
 
+SEED = 1234
+
+GLOBAL_PLOT_DIR = "generated/global_plots"
+
 RECORD_FPS = 8
 
 CAPTURE_LTRB_OFFSET = (9, 38, -9, -9)
 SCREEN_NAME = "Android Emulator - Pixel_4a_API_33:5554"
 
-ARCHITECTURES_CONFIG_DIR = "configs/architectures"
 PLAYERS_CONFIG_DIR = "configs/players"
 DATASETS_CONFIG_DIR = "configs/datasets"
 MODELS_CONFIG_DIR = "configs/models"
@@ -17,8 +20,7 @@ MODELS_CONFIG_DIR = "configs/models"
 ORIGINAL_DATA_DIR = "generated/data/original"
 DOWNSCALED_DIR = "generated/data/downscaled"
 
-DATASET_JSON_OUT_FILE = "generated/utils/datasets.json"
-ARCH_JSON_OUT_DIR = "generated/utils/"
+DATASET_JSON_OUT_FILE = "generated/datasets_list.json"
 
 resultant_models_root = "generated/output/"
 
