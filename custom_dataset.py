@@ -72,10 +72,13 @@ def to_tf_dataset(dataset : CustomDataset, sequence_length : int, img_res : tupl
 
     data = []
     labels = []
-    nothing_indices = [i for i in range(sequence_length, len(dataset.path_label_pair)) if dataset.path_label_pair[i][1] == int(Action.DO_NOTHING)]
+    nothing_indices = [i for i in range(sequence_length - 1, len(dataset.path_label_pair)) if dataset.path_label_pair[i][1] == int(Action.DO_NOTHING)]
 
     keep_count = int(len(nothing_indices) * (1.0 - dataset.nothing_skip_rate))
     keep_indices = random.sample(nothing_indices, keep_count)
+
+    print("Non Nothing len: {}".format(len(dataset.path_label_pair) - len(nothing_indices)))
+    print("Keep Len: {}".format(keep_count))
 
     for i in range(0, len(dataset.path_label_pair) - (sequence_length - 1)):
         
@@ -84,10 +87,12 @@ def to_tf_dataset(dataset : CustomDataset, sequence_length : int, img_res : tupl
         if (dataset.path_label_pair[last_index][1] == int(Action.DO_NOTHING) and last_index not in keep_indices):
             continue
 
-        img_list = [dataset.path_label_pair[x][0] for x in range(i, i + sequence_length)]
+        img_list = [dataset.path_label_pair[x][0] for x in range(i, last_index + 1)]
 
         data.append(img_list)
         labels.append(dataset.path_label_pair[last_index][1])
+
+    print("total len: {}".format(len(labels)))
 
     dataset = tf.data.Dataset.from_tensor_slices((data, labels))
     dataset = dataset.map(convert_path_to_image, num_parallel_calls=tf.data.AUTOTUNE)

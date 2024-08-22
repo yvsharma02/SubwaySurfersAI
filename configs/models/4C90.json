@@ -1,0 +1,10 @@
+{
+    "model_architecture_name": "4C",
+    "input_image_dimension": [310, 150],
+    "sequence_length": 3,
+    "epoch": 50,
+    "batch_size": 32,
+    "train_set_name": "complete-skip-90",
+    "validation_sets" : ["validation-skip-0", "validation-skip-70", "validation-skip-100", "validation-skip-0-no-mirror"],
+    "testing_fraction": 0.1
+}
