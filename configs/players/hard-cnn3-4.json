@@ -1,0 +1,9 @@
+{
+    "player_name": "hard-cnn3-4",
+    "model_name": "cnn3-4",
+    "same_action_wait_frames": 3,
+    "min_vertical_confidence": 0.5,
+    "min_horizontal_confidence": 0.85,
+    "min_nothing_confidence": 0,
+    "target_fps": 8
+}

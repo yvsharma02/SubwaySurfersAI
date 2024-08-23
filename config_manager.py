@@ -13,13 +13,19 @@ def save_json(path: str, obj):
     with (open(path, "w") as file):
         file.write(json.dumps(obj.__dict__))
 
+loaded = False
 models_config = {}
 datasets_config = {}
 players_config = {}
 
 def load_configs():
 
-    global models_config, datasets_config, players_config
+    global models_config, datasets_config, players_config, loaded
+
+    if (loaded):
+        return
+
+    loaded = True
 
     for tc in os.listdir(settings.MODELS_CONFIG_DIR):
         name = tc.removesuffix('.json')

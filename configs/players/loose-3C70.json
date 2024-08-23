@@ -1,0 +1,9 @@
+{
+    "player_name": "loose-3C70",
+    "model_name": "3C70",
+    "same_action_wait_frames": 4,
+    "min_vertical_confidence": 0.5,
+    "min_horizontal_confidence": 0.5,
+    "min_nothing_confidence": 0,
+    "target_fps": 8
+}

@@ -1,0 +1,9 @@
+{
+    "player_name": "loose-3C95",
+    "model_name": "3C95",
+    "same_action_wait_frames": 3,
+    "min_vertical_confidence": 0.65,
+    "min_horizontal_confidence": 0.725,
+    "min_nothing_confidence": 0,
+    "target_fps": 8
+}

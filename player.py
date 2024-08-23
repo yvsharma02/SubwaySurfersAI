@@ -118,8 +118,8 @@ def start_player(player_config : configs.PlayerConfig):
         pred_file.write(info)
 
         if (remaining_time > 0.2):
-            print(remaining_time)
-            time.sleep(remaining_time)
+           print(remaining_time)
+           time.sleep(remaining_time)
 
 config_manager.load_configs()
-start_player(config_manager.get_player_config("medium-cnn3-4"))
+start_player(config_manager.get_player_config("loose-3C70"))

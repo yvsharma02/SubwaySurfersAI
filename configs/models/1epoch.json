@@ -1,0 +1,10 @@
+{
+    "model_architecture_name": "3C",
+    "input_image_dimension": [170, 82],
+    "sequence_length": 3,
+    "epoch": 1,
+    "batch_size": 32,
+    "train_set_name": "validation-skip-0",
+    "validation_sets" : ["validation-skip-70"],
+    "testing_fraction": 0.1
+}
