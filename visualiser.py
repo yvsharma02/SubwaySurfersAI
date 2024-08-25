@@ -159,9 +159,34 @@ import cv2
 import numpy as np
 from typing import List
 
+def parse_pred(dataset_dir):
+    import re
+    
+    pred_file_path = os.path.join(dataset_dir, 'pred.txt')
+    pred_map = {}
+
+    with open(pred_file_path, 'r') as file:
+        content = file.read()
+    
+    # Use regex to find all matches
+    pattern = r'Count\[(\d+)\]:\n(\[\[.*?]])'
+    matches = re.findall(pattern, content, re.DOTALL)
+    
+    for count, pred_values in matches:
+        count = int(count)
+        # Convert string representation to actual list of floats
+        pred_values = [[float(x) for x in pred_values.strip('[]').split()]]
+        pred_map[count] = pred_values
+
+    return pred_map
+    
+
 def combine_images_with_arrows(input_folders: List[str], output_folder: str, labels: List[str]):
     # Create output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)
+    
+    # Parse predictions from the first input folder
+    pred_map = parse_pred(input_folders[0])
     
     # Get list of image files that exist in all input folders
     image_files = []
@@ -182,12 +207,15 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
     # Calculate dimensions for the combined image
     num_images = len(input_folders)
     padding = 50  # Padding on each side
-    combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding  # Extra 50 pixels for each arrow, plus padding
-    combined_height = int(max_height * 1.4) + 30  # Increase height by 40% to accommodate zoom and add 30 pixels for labels
+    pred_width = 200  # Width for prediction column
+    combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width  # Extra 50 pixels for each arrow, plus padding and prediction width
+    combined_height = max_height + 40  # Add 40 pixels for labels and padding
     
     # Create arrow image
     arrow = np.zeros((combined_height, 50, 3), dtype=np.uint8)
     cv2.arrowedLine(arrow, (10, combined_height//2), (40, combined_height//2), (255, 255, 255), 2, tipLength=0.3)
+    
+    action_labels = ['Up', 'Down', 'Left', 'Right', 'Nothing']
     
     for idx, image_file in enumerate(image_files):
         frames = []
@@ -224,12 +252,13 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             faded_frame = (centered_frame * fade_factor).astype(np.uint8)
             
             # Place the frame in the combined image
-            y_offset = (combined_height - max_height - 30) // 2
+            y_offset = (combined_height - max_height) // 2
             combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+max_width] = faded_frame
             
             # Add label below the image
             label = labels[i]
-            cv2.putText(combined_frame, label, (x_offset, y_offset + max_height + 25), 
+            label_x = x_offset + max_width // 2 - 50  # Center the label
+            cv2.putText(combined_frame, label, (label_x, combined_height - 10), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
             
             x_offset += max_width
@@ -237,10 +266,34 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
                 combined_frame[:, x_offset:x_offset+50] = arrow
                 x_offset += 50
         
+        # Add arrow between last image column and prediction column
+        pred_arrow_x = x_offset
+        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, combined_height//2), (pred_arrow_x + 40, combined_height//2), (255, 255, 255), 2, tipLength=0.3)
+        
+        # Add predictions to the right of the last image set
+        key = int(image_file.replace('.png', ''))
+        predictions = pred_map[key][0] if key in pred_map else [0] * 5
+        pred_x = combined_width - pred_width + 10
+        pred_y_start = padding
+        pred_spacing = (combined_height - 2 * padding) // 5
+        
+        for j, (pred, action_label) in enumerate(zip(predictions[:5], action_labels)):
+            pred_y = pred_y_start + j * pred_spacing
+            
+            # Add action label
+            cv2.putText(combined_frame, action_label, (pred_x, pred_y + 5), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            # Add colored text for predicted value
+            pred_text = f"{pred:.2f}"
+            color = (0, int(pred * 255), int((1 - pred) * 255))  # Red (0) to Green (1) in BGR
+            cv2.putText(combined_frame, pred_text, (pred_x + 100, pred_y + 5), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+        
         # Save the combined frame
         output_path = os.path.join(output_folder, image_file)
         cv2.imwrite(output_path, combined_frame)
-    print(f"Combined images with zoom-in, fade-in effects, and labels saved in {output_folder}")
+    print(f"Combined images with zoom-in, fade-in effects, labels, and colored predictions saved in {output_folder}")
 # # Example usage:
 input_videos = [
     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
