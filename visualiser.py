@@ -288,7 +288,9 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
             
             x_offset += max_width
             if i < num_images - 1:
-                combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = arrow
+                # Apply fade-in effect to the arrow
+                faded_arrow = (arrow * fade_factor).astype(np.uint8)
+                combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = faded_arrow
                 x_offset += 50
         
         # Calculate fade factor for lines, text, and neural network
@@ -317,9 +319,11 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (int(255 * line_fade_factor), int(255 * line_fade_factor), int(255 * line_fade_factor)), 1, cv2.LINE_AA)
 
         
-        # Add arrow between last image column and neural network visualization
+        # Add arrow between last image column and neural network visualization with fade-in effect
         nn_arrow_x = x_offset
-        cv2.arrowedLine(combined_frame, (nn_arrow_x + 10, y_offset + max_height//2), (nn_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
+        arrow_fade_factor = nn_fade_factor  # Use the same fade factor as the neural network
+        cv2.arrowedLine(combined_frame, (nn_arrow_x + 10, y_offset + max_height//2), (nn_arrow_x + 40, y_offset + max_height//2), 
+                        (int(255 * arrow_fade_factor), int(255 * arrow_fade_factor), int(255 * arrow_fade_factor)), 2, tipLength=0.3)
         
         # Add neural network visualization with fade-in effect
         nn_x = nn_arrow_x + 50
@@ -342,9 +346,10 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (int(255 * line_fade_factor), int(255 * line_fade_factor), int(255 * line_fade_factor)), 1, cv2.LINE_AA)
 
 
-        # Add arrow between neural network visualization and prediction column
+        # Add arrow between neural network visualization and prediction column with fade-in effect
         pred_arrow_x = nn_x + nn_width
-#        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
+#        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), 
+#                        (int(255 * arrow_fade_factor), int(255 * arrow_fade_factor), int(255 * arrow_fade_factor)), 2, tipLength=0.3)
 
         # Add 'Flatten->LSTM->Fully Connected' text below Neural Network with fade-in effect
         nn_text = "Flatten->LSTM->Output"
