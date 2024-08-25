@@ -160,4 +160,73 @@ config_manager.load_configs()
 #visualise(3, 'generated/visualiser/loose-3C95-layer-1', vis_CNN3, 'generated/output/3C95/player/loose-3C95/2024-08-22-20-22-22', 1)
 #make_movie('generated/output/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45', 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie.mp4')
 #visualise(3, 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/', vis_CNN3, 'generated/output/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45', 1)
-process_brightest_channels('generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/', 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4')
+# process_brightest_channels('generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/', 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4')
+
+import cv2
+import numpy as np
+from typing import List
+
+def combine_videos_with_arrows(input_videos: List[str], output_video: str):
+    # Open video captures
+    caps = [cv2.VideoCapture(video) for video in input_videos]
+    
+    # Get video properties
+    widths = [int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) for cap in caps]
+    heights = [int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) for cap in caps]
+    fps = caps[0].get(cv2.CAP_PROP_FPS)
+    
+    # Use the largest dimensions for the output
+    max_width = max(widths)
+    max_height = max(heights)
+    
+    # Calculate dimensions for the combined video
+    num_videos = len(input_videos)
+    combined_width = max_width * num_videos + 50 * (num_videos - 1)  # Extra 50 pixels for each arrow
+    combined_height = max_height
+    
+    # Create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_video, fourcc, fps, (combined_width, combined_height))
+    
+    # Create arrow image
+    arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
+    cv2.arrowedLine(arrow, (10, max_height//2), (40, max_height//2), (255, 255, 255), 2, tipLength=0.3)
+    
+    while True:
+        frames = []
+        for cap in caps:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # Resize frame to max dimensions
+            frame = cv2.resize(frame, (max_width, max_height))
+            frames.append(frame)
+        
+        if len(frames) != num_videos:
+            break
+        
+        # Combine frames
+        combined_frame = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
+        x_offset = 0
+        for i, (frame, y_offset, x_offset_frame) in enumerate(frames):
+            combined_frame[y_offset:y_offset+frame.shape[0], x_offset+x_offset_frame:x_offset+x_offset_frame+max_width] = frame
+            x_offset += max_width
+            if i < num_videos - 1:
+                combined_frame[:, x_offset:x_offset+50] = arrow
+                x_offset += 50
+        
+        out.write(combined_frame)
+    
+    # Release everything
+    for cap in caps:
+        cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+# Example usage:
+input_videos = [
+    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie.mp4',
+    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4_flipped_RG.mp4',
+]
+output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final.mp4'
+combine_videos_with_arrows(input_videos, output_video)
