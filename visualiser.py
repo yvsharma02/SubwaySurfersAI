@@ -210,7 +210,7 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
     padding = 50  # Padding on each side
     pred_width = 200  # Width for prediction column
     combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width  # Extra 50 pixels for each arrow, plus padding and prediction width
-    combined_height = max_height + 150  # Increased height to accommodate text
+    combined_height = max_height + 250  # Increased height to accommodate text and title
     
     # Create arrow image
     arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
@@ -230,7 +230,10 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
         x_offset = padding  # Start after left padding
         for i, frame in enumerate(frames):
             # Calculate fade factor (0 to 1) with delay for each column
-            fade_factor = min(max(idx - i * 10, 0) / 20, 1)  # Fade-in effect over 20 frames, with 10 frame delay between columns
+            if i == 0:
+                fade_factor = min(max(idx - i * 10, 0) / 5, 1)  # Fade-in effect over 5 frames for the first image
+            else:
+                fade_factor = min(max(idx - i * 10, 0) / 6.67, 1)  # Fade-in effect over 6.67 frames for other images
             
             # Center the frame without rescaling
             y_start = (max_height - frame.shape[0]) // 2
@@ -246,14 +249,14 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             faded_frame = (centered_frame * fade_factor).astype(np.uint8)
             
             # Place the frame in the combined image
-            y_offset = (combined_height - max_height - 110) // 2
+            y_offset = (combined_height - max_height - 160) // 2 + 50  # Adjusted for title and text
             combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+max_width] = faded_frame
             
             # Add label below the image (centered and smaller)
             label = labels[i]
             label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)[0]
             label_x = x_offset + (max_width - label_size[0]) // 2
-            cv2.putText(combined_frame, label, (label_x, combined_height - 120), 
+            cv2.putText(combined_frame, label, (label_x, y_offset + max_height + 30), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
             
             # Add additional information below each image
@@ -261,7 +264,7 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
                 text = "LSTM Input"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
                 text_x = x_offset + (max_width - text_size[0]) // 2
-                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                cv2.putText(combined_frame, text, (text_x, y_offset + max_height + 50), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
                 
                 # Display last three frames
@@ -272,25 +275,25 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
                     for j, last_frame in enumerate(last_three):
                         small_frame = cv2.resize(last_frame, (max_width // 4, max_height // 4))
                         x_small = x_offset + j * (max_width // 4 + 5) + (max_width - 3 * max_width // 4 - 10) // 2
-                        y_small = combined_height - 90
+                        y_small = y_offset + max_height + 60
                         combined_frame[y_small:y_small+max_height//4, x_small:x_small+max_width//4] = small_frame
             elif i == 1:
                 text = "3/16 channels"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
                 text_x = x_offset + (max_width - text_size[0]) // 2
-                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                cv2.putText(combined_frame, text, (text_x, y_offset + max_height + 50), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
             elif i == 2:
                 text = "3/50 channels"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
                 text_x = x_offset + (max_width - text_size[0]) // 2
-                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                cv2.putText(combined_frame, text, (text_x, y_offset + max_height + 50), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
             elif i == 3:
                 text = "3/100 channels"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
                 text_x = x_offset + (max_width - text_size[0]) // 2
-                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                cv2.putText(combined_frame, text, (text_x, y_offset + max_height + 50), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
             
             x_offset += max_width
@@ -306,8 +309,8 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
         key = int(image_file.replace('.png', ''))
         predictions = pred_map[key][0] if key in pred_map else [0] * 5
         pred_x = combined_width - pred_width + 10
-        pred_y_start = padding
-        pred_spacing = (combined_height - 2 * padding) // 5
+        pred_y_start = y_offset  # Adjusted to align with images
+        pred_spacing = max_height // 5
         
         for j, (pred, action_label) in enumerate(zip(predictions[:5], action_labels)):
             pred_y = pred_y_start + j * pred_spacing
@@ -321,6 +324,13 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             color = (0, int(pred * 255), int((1 - pred) * 255))  # Red (0) to Green (1) in BGR
             cv2.putText(combined_frame, pred_text, (pred_x + 100, pred_y + 5), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1, cv2.LINE_AA)
+        
+        # Add title "What the CNN sees:" on top and center of the output image
+        title = "What the CNN sees:"
+        title_size = cv2.getTextSize(title, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
+        title_x = (combined_width - title_size[0]) // 2
+        cv2.putText(combined_frame, title, (title_x, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
         
         # Save the combined frame
         output_path = os.path.join(output_folder, image_file)
