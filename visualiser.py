@@ -159,7 +159,7 @@ import cv2
 import numpy as np
 from typing import List
 
-def combine_images_with_arrows(input_folders: List[str], output_folder: str):
+def combine_images_with_arrows(input_folders: List[str], output_folder: str, labels: List[str]):
     # Create output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)
     
@@ -168,7 +168,7 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str):
     for file in os.listdir(input_folders[0]):
         if file.endswith('.png') and all(os.path.exists(os.path.join(folder, file)) for folder in input_folders):
             image_files.append(file)
-    image_files.sort()
+    image_files.sort(key=lambda x: int(x[:-4]))  # Sort based on integer value of filename without '.png'
     
     if not image_files:
         print("No common images found across all input folders.")
@@ -181,26 +181,57 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str):
     
     # Calculate dimensions for the combined image
     num_images = len(input_folders)
-    combined_width = max_width * num_images + 50 * (num_images - 1)  # Extra 50 pixels for each arrow
-    combined_height = max_height
+    padding = 50  # Padding on each side
+    combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding  # Extra 50 pixels for each arrow, plus padding
+    combined_height = int(max_height * 1.4) + 30  # Increase height by 40% to accommodate zoom and add 30 pixels for labels
     
     # Create arrow image
-    arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
-    cv2.arrowedLine(arrow, (10, max_height//2), (40, max_height//2), (255, 255, 255), 2, tipLength=0.3)
+    arrow = np.zeros((combined_height, 50, 3), dtype=np.uint8)
+    cv2.arrowedLine(arrow, (10, combined_height//2), (40, combined_height//2), (255, 255, 255), 2, tipLength=0.3)
     
-    for image_file in image_files:
+    for idx, image_file in enumerate(image_files):
         frames = []
         for folder in input_folders:
             image_path = os.path.join(folder, image_file)
             frame = cv2.imread(image_path)
-            frame = cv2.resize(frame, (max_width, max_height))
             frames.append(frame)
         
-        # Combine frames
+        # Combine frames with zoom-in and fade-in effects
         combined_frame = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
-        x_offset = 0
+        x_offset = padding  # Start after left padding
         for i, frame in enumerate(frames):
-            combined_frame[:, x_offset:x_offset+max_width] = frame
+            zoom_factor = 1 + (0.5 * (1 - min(max(idx - i * 10, 0) / 30, 1)))  # Zoom effect over 30 frames, with 10 frame delay between columns
+            
+            # Calculate fade factor (0 to 1) with delay for each column
+            fade_factor = min(max(idx - i * 10, 0) / 20, 1)  # Fade-in effect over 20 frames, with 10 frame delay between columns
+            
+            # Apply zoom effect
+            zoomed_frame = cv2.resize(frame, None, fx=zoom_factor, fy=zoom_factor)
+            
+            # Center the frame without rescaling
+            y_start = max(0, (max_height - zoomed_frame.shape[0]) // 2)
+            x_start = max(0, (max_width - zoomed_frame.shape[1]) // 2)
+            y_end = min(max_height, y_start + zoomed_frame.shape[0])
+            x_end = min(max_width, x_start + zoomed_frame.shape[1])
+            
+            # Create a blank canvas of max_height x max_width
+            centered_frame = np.zeros((max_height, max_width, 3), dtype=np.uint8)
+            
+            # Place the zoomed frame in the center of the canvas
+            centered_frame[y_start:y_end, x_start:x_end] = zoomed_frame[:y_end-y_start, :x_end-x_start]
+            
+            # Apply fade-in effect
+            faded_frame = (centered_frame * fade_factor).astype(np.uint8)
+            
+            # Place the frame in the combined image
+            y_offset = (combined_height - max_height - 30) // 2
+            combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+max_width] = faded_frame
+            
+            # Add label below the image
+            label = labels[i]
+            cv2.putText(combined_frame, label, (x_offset, y_offset + max_height + 25), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            
             x_offset += max_width
             if i < num_images - 1:
                 combined_frame[:, x_offset:x_offset+50] = arrow
@@ -209,18 +240,16 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str):
         # Save the combined frame
         output_path = os.path.join(output_folder, image_file)
         cv2.imwrite(output_path, combined_frame)
-    
-    print(f"Combined images saved in {output_folder}")
-
+    print(f"Combined images with zoom-in, fade-in effects, and labels saved in {output_folder}")
 # # Example usage:
-# input_videos = [
-#     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
-#     'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4',
-# ]
-# output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
+input_videos = [
+    'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
+    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4',
+]
+output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
 # combine_images_with_arrows(input_videos, output_video)
 
-dataset = 'generated/output/3C90/player/medium-3C90/2024-08-25-18-23-23'
+dataset = 'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24'
 vis_dir = dataset.replace("output", "visualiser")
 
 # if not os.path.exists(f'{vis_dir}/layer0'):
@@ -234,10 +263,10 @@ vis_dir = dataset.replace("output", "visualiser")
 # f2 = process_brightest_channels(f'{vis_dir}/layer2', f'{vis_dir}/layer2-brightest')
 # f4 = process_brightest_channels(f'{vis_dir}/layer4', f'{vis_dir}/layer4-brightest')
 
-f0 = f"{vis_dir}/layer0-brightest/5_15_12"
-f2 = f"{vis_dir}/layer2-brightest/1_19_0"
-f4 = f"{vis_dir}/layer4-brightest/82_65_83"
-# # Example usage:
+f0 = f"{vis_dir}/layer0-brightest/5_12_15"
+f2 = f"{vis_dir}/layer2-brightest/1_15_19"
+f4 = f"{vis_dir}/layer4-brightest/92_95_74"
+# # # Example usage:
 input_videos = [
     dataset,
     f0,
@@ -245,4 +274,4 @@ input_videos = [
     f4,
 ]
 output_video = f'{vis_dir}/final'
-combine_images_with_arrows(input_videos, output_video)
+combine_images_with_arrows(input_videos, output_video, ['Original', 'Conv #1', 'Conv #2', 'Conv #3'])
