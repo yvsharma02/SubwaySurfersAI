@@ -182,7 +182,7 @@ def parse_pred(dataset_dir):
     return pred_map
     
 
-def combine_images_with_arrows(input_folders: List[str], output_folder: str, labels: List[str]):
+def animate(input_folders: List[str], output_folder: str, labels: List[str]):
     # Create output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)
     
@@ -209,7 +209,8 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
     num_images = len(input_folders)
     padding = 50  # Padding on each side
     pred_width = 200  # Width for prediction column
-    combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width  # Extra 50 pixels for each arrow, plus padding and prediction width
+    nn_width = 100  # Reduced width for neural network visualization
+    combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width + nn_width  # Extra 50 pixels for each arrow, plus padding, prediction width, and neural network width
     combined_height = max_height + 250  # Increased height to accommodate text and title
     
     # Create arrow image
@@ -229,9 +230,9 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
         combined_frame = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
         x_offset = padding  # Start after left padding
         for i, frame in enumerate(frames):
-            # Calculate fade factor (0 to 1) with delay for each column
+            # Calculate fade factor (0 to 1) with delay for each column, except the first
             if i == 0:
-                fade_factor = min(max(idx - i * 10, 0) / 5, 1)  # Fade-in effect over 5 frames for the first image
+                fade_factor = 1  # No fade for the first column
             else:
                 fade_factor = min(max(idx - i * 10, 0) / 6.67, 1)  # Fade-in effect over 6.67 frames for other images
             
@@ -245,8 +246,11 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             # Place the frame in the center of the canvas
             centered_frame[y_start:y_start+frame.shape[0], x_start:x_start+frame.shape[1]] = frame
             
-            # Apply fade-in effect
-            faded_frame = (centered_frame * fade_factor).astype(np.uint8)
+            # Apply fade-in effect (except for the first column)
+            if i == 0:
+                faded_frame = centered_frame
+            else:
+                faded_frame = (centered_frame * fade_factor).astype(np.uint8)
             
             # Place the frame in the combined image
             y_offset = (combined_height - max_height - 160) // 2 + 50  # Adjusted for title and text
@@ -301,27 +305,42 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
                 combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = arrow
                 x_offset += 50
         
-        # Add arrow between last image column and prediction column
-        pred_arrow_x = x_offset
-        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
+        # Add arrow between last image column and neural network visualization
+        nn_arrow_x = x_offset
+        cv2.arrowedLine(combined_frame, (nn_arrow_x + 10, y_offset + max_height//2), (nn_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
         
-        # Add predictions to the right of the last image set
+        # Add neural network visualization with fade-in effect
+        nn_x = nn_arrow_x + 50
+        nn_y = y_offset
+        nn_height = max_height
+        nn_fade_factor = min(max(idx - num_images * 10, 0) / 5, 1)  # Fade-in effect over 5 frames, starting after the last image
+        
+        # Add arrow between neural network visualization and prediction column
+        pred_arrow_x = nn_x + nn_width
+#        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
+        
+        # Add predictions to the right of the neural network visualization
         key = int(image_file.replace('.png', ''))
         predictions = pred_map[key][0] if key in pred_map else [0] * 5
+        draw_neural_network(combined_frame, nn_x, nn_y, nn_width, nn_height, nn_fade_factor, predictions)
         pred_x = combined_width - pred_width + 10
         pred_y_start = y_offset  # Adjusted to align with images
-        pred_spacing = max_height // 5
+        pred_spacing = nn_height // 5  # Align with neural network output nodes
+        
+        # Calculate fade factor for predictions (same as neural network)
+        pred_fade_factor = nn_fade_factor
         
         for j, (pred, action_label) in enumerate(zip(predictions[:5], action_labels)):
-            pred_y = pred_y_start + j * pred_spacing
+            pred_y = pred_y_start + j * pred_spacing + pred_spacing // 2  # Center vertically with NN output nodes
             
-            # Add action label
+            # Add action label with fade-in effect
+            label_color = [int(c * pred_fade_factor) for c in (255, 255, 255)]
             cv2.putText(combined_frame, action_label, (pred_x, pred_y + 5), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.3, label_color, 1, cv2.LINE_AA)
             
-            # Add colored text for predicted value
+            # Add colored text for predicted value with fade-in effect
             pred_text = f"{pred:.2f}"
-            color = (0, int(pred * 255), int((1 - pred) * 255))  # Red (0) to Green (1) in BGR
+            color = (0, int(pred * 255 * pred_fade_factor), int((1 - pred) * 255 * pred_fade_factor))  # Red (0) to Green (1) in BGR with fade
             cv2.putText(combined_frame, pred_text, (pred_x + 100, pred_y + 5), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1, cv2.LINE_AA)
         
@@ -335,7 +354,40 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
         # Save the combined frame
         output_path = os.path.join(output_folder, image_file)
         cv2.imwrite(output_path, combined_frame)
-    print(f"Combined images with fade-in effects, labels, and colored predictions saved in {output_folder}")
+    print(f"Combined images with fade-in effects, labels, colored predictions, and neural network visualization saved in {output_folder}")
+
+def draw_neural_network(image, x, y, width, height, fade_factor, pred_list):
+    # Define the number of nodes in each layer
+    layers = [7, 6, 5]  # Input layer, hidden layer, output layer
+    
+    # Calculate the vertical spacing between nodes
+    spacing = height // (max(layers) + 1)
+    
+    # Generate random activations for this frame
+    activations = [[np.random.choice([True, False]) for _ in range(layer_size)] for layer_size in layers[0:2]]
+    activations.append([True if pred_list[i] > 0.5 else False for i in range(layers[-1])])
+    # Draw the nodes and connections
+    for i, layer_size in enumerate(layers):
+        layer_x = x + (i * width) // (len(layers) - 1)
+        for j in range(layer_size):
+            node_y = y + ((j + 1) * height) // (layer_size + 1)
+            
+            # Set color based on activation and apply fade-in effect
+            color = (0, int(255 * fade_factor), 0) if activations[i][j] else (int(255 * fade_factor), int(255 * fade_factor), int(255 * fade_factor))
+            
+            cv2.circle(image, (layer_x, node_y), 5, color, -1)
+            
+            # Draw connections to the next layer
+            if i < len(layers) - 1:
+                next_layer_x = x + ((i + 1) * width) // (len(layers) - 1)
+                for k in range(layers[i + 1]):
+                    next_node_y = y + ((k + 1) * height) // (layers[i + 1] + 1)
+                    if np.random.random() < 0.2:  # Only color about 20% of lines
+                        green_shade = np.random.randint(50, 256)
+                        line_color = (0, int(green_shade * fade_factor), 0)
+                    else:
+                        line_color = (int(50 * fade_factor), int(50 * fade_factor), int(50 * fade_factor))  # Light gray for other lines
+                    cv2.line(image, (layer_x, node_y), (next_layer_x, next_node_y), line_color, 1)
 # # Example usage:
 input_videos = [
     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
@@ -369,4 +421,4 @@ input_videos = [
     f4,
 ]
 output_video = f'{vis_dir}/final'
-combine_images_with_arrows(input_videos, output_video, ['Original', 'Conv #1', 'Conv #2', 'Conv #3'])
+animate(input_videos, output_video, ['Original', 'Conv #1', 'Conv #2', 'Conv #3'])
