@@ -17,7 +17,6 @@ from keras import models
 import config_manager
 
 import tensorflow as tf
-#from keras import models, layers, losses
 
 def start_player(player_config : configs.PlayerConfig):
     model_config : configs.ModelConfig = config_manager.get_model_config(player_config.model_name)
@@ -58,7 +57,7 @@ def start_player(player_config : configs.PlayerConfig):
         im = Image.fromarray(arr).resize(downscaled_shape)
         im_save_count += 1
         im.save(os.path.join(out_dir, str(im_save_count) + ".png"))
-        print(im)
+#        print(im)
         tensor = np.asarray(im, dtype=np.float32).reshape((int(model_config.input_image_dimension[0]), int(model_config.input_image_dimension[1]), 3))
         tensor = tensor / 255
 

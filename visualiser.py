@@ -8,6 +8,7 @@ import configs
 import matplotlib.pyplot as plt
 from keras import layers
 import settings
+import config_manager
 
 from typing import Callable
 from PIL import Image
@@ -30,11 +31,11 @@ def get_layer(model, layername):
                 return layer.layer
     return None
 
-def vis_CNN3(output_dir, im_list, im_no):
+def vis_CNN3(output_dir, im_list, im_no, out_layer_count):
     model = tf.keras.models.load_model(os.path.join(settings.get_model_train_out_dir("3C95"), "model.keras"))
 
     intermediate_layer_model = tf.keras.Model(inputs=model.input,
-                                          outputs=model.layers[0].output)
+                                          outputs=model.layers[out_layer_count].output)
     print(im_list)
     images = tf.convert_to_tensor([[im_loader(x) for x in im_list]])
     print(images.shape)
@@ -54,15 +55,15 @@ def vis_CNN3(output_dir, im_list, im_no):
         
         path = "{}/{}.png".format(dir_path, im_no)
         cv2.imwrite(path, 255*images[len(images) - 1].numpy())
-#        im_no += 1
         filter_no += 1
 
 
-def visualise(seq_len, output_dir, func, data_dir,):
+def visualise(seq_len, output_dir, func, data_dir, out_layer_count):
     dir_content = ["{}.png".format(i + 1) for i in range(0, len(os.listdir(data_dir)) - 1)]
+    
     for i in range(seq_len - 1, len(dir_content) - seq_len + 1):
         images = [os.path.join(data_dir, dir_content[j]) for j in range(i - seq_len + 1, i + 1)]
-        func(output_dir, images, i)
+        func(output_dir, images, i, out_layer_count)
 
 def combine_color_channels(red_folder, green_folder, blue_folder, output_folder):
     if not os.path.exists(output_folder):
@@ -90,7 +91,10 @@ def combine_color_channels(red_folder, green_folder, blue_folder, output_folder)
 def make_movie(in_folder, out_path):
     image_files = sorted([f for f in os.listdir(in_folder) if f.endswith('.png')], 
                          key=lambda x: int(x.split('.')[0]))
-    
+    # Check if output folder exists, create it if it doesn't
+    if not os.path.exists(os.path.dirname(out_path)):
+        os.makedirs(os.path.dirname(out_path))
+
     if not image_files:
         print(f"No PNG images found in {in_folder}")
         return
@@ -151,7 +155,9 @@ def process_brightest_channels(root_folder, output_folder):
 
     print(f"Processed brightest channels with flipped red and green, video saved in {output_folder}")
 
-# Example usage
-root_folder = 'generated/visualiser/loose-3C95-layer-1/'
-output_folder = 'generated/visualiser/loose-3C95-layer-1/output'
-process_brightest_channels(root_folder, output_folder)
+
+config_manager.load_configs()
+#visualise(3, 'generated/visualiser/loose-3C95-layer-1', vis_CNN3, 'generated/output/3C95/player/loose-3C95/2024-08-22-20-22-22', 1)
+#make_movie('generated/output/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45', 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie.mp4')
+#visualise(3, 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/', vis_CNN3, 'generated/output/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45', 1)
+process_brightest_channels('generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/', 'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4')
