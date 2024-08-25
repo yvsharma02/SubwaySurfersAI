@@ -58,7 +58,7 @@ def vis_CNN3(output_dir, im_list, im_no, out_layer_count):
         filter_no += 1
 
 
-def visualise(seq_len, output_dir, func, data_dir, out_layer_count):
+def visualise(seq_len, data_dir, func, output_dir, out_layer_count):
     dir_content = ["{}.png".format(i + 1) for i in range(0, len(os.listdir(data_dir)) - 1)]
     
     for i in range(seq_len - 1, len(dir_content) - seq_len + 1):
@@ -129,7 +129,6 @@ def find_brightest_channels(root_folder):
     sorted_channels = sorted(channel_brightness, key=lambda x: x[1], reverse=True)
 
     return [channel[0] for channel in sorted_channels[:3]]
-
 def process_brightest_channels(root_folder, output_folder):
     brightest_channels = find_brightest_channels(root_folder)
 
@@ -146,14 +145,8 @@ def process_brightest_channels(root_folder, output_folder):
     # Use the existing combine_color_channels function with flipped channels
     combine_color_channels(*flipped_channels, combo_output_folder)
 
-    # Generate video name based on folder names
-    video_name = f"{combo_name}_flipped_RG.mp4"
-    video_path = os.path.join(output_folder, video_name)
-
-    # Make movie from the combined images
-    make_movie(combo_output_folder, video_path)
-
-    print(f"Processed brightest channels with flipped red and green, video saved in {output_folder}")
+    print(f"Processed brightest channels with flipped red and green, images saved in {combo_output_folder}")
+    return combo_output_folder
 
 
 config_manager.load_configs()
@@ -166,67 +159,90 @@ import cv2
 import numpy as np
 from typing import List
 
-def combine_videos_with_arrows(input_videos: List[str], output_video: str):
-    # Open video captures
-    caps = [cv2.VideoCapture(video) for video in input_videos]
+def combine_images_with_arrows(input_folders: List[str], output_folder: str):
+    # Create output folder if it doesn't exist
+    os.makedirs(output_folder, exist_ok=True)
     
-    # Get video properties
-    widths = [int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) for cap in caps]
-    heights = [int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) for cap in caps]
-    fps = caps[0].get(cv2.CAP_PROP_FPS)
+    # Get list of image files that exist in all input folders
+    image_files = []
+    for file in os.listdir(input_folders[0]):
+        if file.endswith('.png') and all(os.path.exists(os.path.join(folder, file)) for folder in input_folders):
+            image_files.append(file)
+    image_files.sort()
     
-    # Use the largest dimensions for the output
-    max_width = max(widths)
-    max_height = max(heights)
+    if not image_files:
+        print("No common images found across all input folders.")
+        return
     
-    # Calculate dimensions for the combined video
-    num_videos = len(input_videos)
-    combined_width = max_width * num_videos + 50 * (num_videos - 1)  # Extra 50 pixels for each arrow
+    # Process the first image to get dimensions
+    first_images = [cv2.imread(os.path.join(folder, image_files[0])) for folder in input_folders]
+    max_height = max(img.shape[0] for img in first_images)
+    max_width = max(img.shape[1] for img in first_images)
+    
+    # Calculate dimensions for the combined image
+    num_images = len(input_folders)
+    combined_width = max_width * num_images + 50 * (num_images - 1)  # Extra 50 pixels for each arrow
     combined_height = max_height
-    
-    # Create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_video, fourcc, fps, (combined_width, combined_height))
     
     # Create arrow image
     arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
     cv2.arrowedLine(arrow, (10, max_height//2), (40, max_height//2), (255, 255, 255), 2, tipLength=0.3)
     
-    while True:
+    for image_file in image_files:
         frames = []
-        for cap in caps:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            # Resize frame to max dimensions
+        for folder in input_folders:
+            image_path = os.path.join(folder, image_file)
+            frame = cv2.imread(image_path)
             frame = cv2.resize(frame, (max_width, max_height))
             frames.append(frame)
-        
-        if len(frames) != num_videos:
-            break
         
         # Combine frames
         combined_frame = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
         x_offset = 0
-        for i, (frame, y_offset, x_offset_frame) in enumerate(frames):
-            combined_frame[y_offset:y_offset+frame.shape[0], x_offset+x_offset_frame:x_offset+x_offset_frame+max_width] = frame
+        for i, frame in enumerate(frames):
+            combined_frame[:, x_offset:x_offset+max_width] = frame
             x_offset += max_width
-            if i < num_videos - 1:
+            if i < num_images - 1:
                 combined_frame[:, x_offset:x_offset+50] = arrow
                 x_offset += 50
         
-        out.write(combined_frame)
+        # Save the combined frame
+        output_path = os.path.join(output_folder, image_file)
+        cv2.imwrite(output_path, combined_frame)
     
-    # Release everything
-    for cap in caps:
-        cap.release()
-    out.release()
-    cv2.destroyAllWindows()
+    print(f"Combined images saved in {output_folder}")
 
-# Example usage:
+# # Example usage:
+# input_videos = [
+#     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
+#     'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4',
+# ]
+# output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
+# combine_images_with_arrows(input_videos, output_video)
+
+dataset = 'generated/output/3C90/player/medium-3C90/2024-08-25-18-23-23'
+vis_dir = dataset.replace("output", "visualiser")
+
+# if not os.path.exists(f'{vis_dir}/layer0'):
+#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer0', 0)
+# if not os.path.exists(f'{vis_dir}/layer2'):
+#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer2', 2)
+# if not os.path.exists(f'{vis_dir}/layer4'):
+#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer4', 4)
+
+# f0 = process_brightest_channels(f'{vis_dir}/layer0', f'{vis_dir}/layer0-brightest')
+# f2 = process_brightest_channels(f'{vis_dir}/layer2', f'{vis_dir}/layer2-brightest')
+# f4 = process_brightest_channels(f'{vis_dir}/layer4', f'{vis_dir}/layer4-brightest')
+
+f0 = f"{vis_dir}/layer0-brightest/5_15_12"
+f2 = f"{vis_dir}/layer2-brightest/1_19_0"
+f4 = f"{vis_dir}/layer4-brightest/82_65_83"
+# # Example usage:
 input_videos = [
-    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie.mp4',
-    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4_flipped_RG.mp4',
+    dataset,
+    f0,
+    f2,
+    f4,
 ]
-output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final.mp4'
-combine_videos_with_arrows(input_videos, output_video)
+output_video = f'{vis_dir}/final'
+combine_images_with_arrows(input_videos, output_video)

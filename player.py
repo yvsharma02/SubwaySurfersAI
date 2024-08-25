@@ -121,4 +121,4 @@ def start_player(player_config : configs.PlayerConfig):
            time.sleep(remaining_time)
 
 config_manager.load_configs()
-start_player(config_manager.get_player_config("loose-3C70"))
+start_player(config_manager.get_player_config("tighter-3C85"))
