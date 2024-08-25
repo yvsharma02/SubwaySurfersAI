@@ -211,7 +211,7 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
     pred_width = 200  # Width for prediction column
     nn_width = 100  # Reduced width for neural network visualization
     combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width + nn_width  # Extra 50 pixels for each arrow, plus padding, prediction width, and neural network width
-    combined_height = max_height + 250  # Increased height to accommodate text and title
+    combined_height = max_height + 300  # Increased height to accommodate text, title, and new LSTM text
     
     # Create arrow image
     arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
@@ -253,7 +253,7 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
                 faded_frame = (centered_frame * fade_factor).astype(np.uint8)
             
             # Place the frame in the combined image
-            y_offset = (combined_height - max_height - 160) // 2 + 50  # Adjusted for title and text
+            y_offset = (combined_height - max_height - 210) // 2 + 50  # Adjusted for title, text, and new LSTM text
             combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+max_width] = faded_frame
             
             # Add label below the image (centered and smaller)
@@ -304,6 +304,20 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
             if i < num_images - 1:
                 combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = arrow
                 x_offset += 50
+        
+        # Add horizontal curly bracket and LSTM text
+        bracket_start = padding
+        bracket_end = bracket_start + (max_width + 50) * (num_images) - 50
+        bracket_y = y_offset + max_height + 100
+        cv2.line(combined_frame, (bracket_start, bracket_y), (bracket_end, bracket_y), (255, 255, 255), 1)
+        cv2.line(combined_frame, (bracket_start, bracket_y), (bracket_start, bracket_y - 10), (255, 255, 255), 1)
+        cv2.line(combined_frame, (bracket_end, bracket_y), (bracket_end, bracket_y - 10), (255, 255, 255), 1)
+        
+        lstm_text = "3 Similar input taken together by LSTM"
+        lstm_text_size = cv2.getTextSize(lstm_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
+        lstm_text_x = (bracket_start + bracket_end - lstm_text_size[0]) // 2
+        cv2.putText(combined_frame, lstm_text, (lstm_text_x, bracket_y + 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
         
         # Add arrow between last image column and neural network visualization
         nn_arrow_x = x_offset
