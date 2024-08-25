@@ -263,25 +263,7 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
             cv2.putText(combined_frame, label, (label_x, y_offset + max_height + 30), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
             
-            # Add additional information below each image
-            if i == 0:
-                text = "LSTM Input"
-                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
-                text_x = x_offset + (max_width - text_size[0]) // 2
-                cv2.putText(combined_frame, text, (text_x, y_offset + max_height + 50), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
-                
-                # Display last three frames
-                if idx >= 2:
-                    last_three = [cv2.imread(os.path.join(input_folders[0], image_files[idx-2])),
-                                  cv2.imread(os.path.join(input_folders[0], image_files[idx-1])),
-                                  cv2.imread(os.path.join(input_folders[0], image_files[idx]))]
-                    for j, last_frame in enumerate(last_three):
-                        small_frame = cv2.resize(last_frame, (max_width // 4, max_height // 4))
-                        x_small = x_offset + j * (max_width // 4 + 5) + (max_width - 3 * max_width // 4 - 10) // 2
-                        y_small = y_offset + max_height + 60
-                        combined_frame[y_small:y_small+max_height//4, x_small:x_small+max_width//4] = small_frame
-            elif i == 1:
+            if i == 1:
                 text = "3/16 channels"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
                 text_x = x_offset + (max_width - text_size[0]) // 2
@@ -305,6 +287,12 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
                 combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = arrow
                 x_offset += 50
         
+        text = "Fully Connected"
+        label_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)[0]
+        label_x = x_offset + (max_width - label_size[0]) + 125 // 2
+        cv2.putText(combined_frame, text, (label_x, y_offset + max_height + 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+
         # Add horizontal curly bracket and LSTM text
         bracket_start = padding
         bracket_end = bracket_start + (max_width + 50) * (num_images) - 50
@@ -313,11 +301,13 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
         cv2.line(combined_frame, (bracket_start, bracket_y), (bracket_start, bracket_y - 10), (255, 255, 255), 1)
         cv2.line(combined_frame, (bracket_end, bracket_y), (bracket_end, bracket_y - 10), (255, 255, 255), 1)
         
-        lstm_text = "3 Similar input taken together by LSTM"
+        # Add horizontal curly bracket below neural network layer
+        lstm_text = "X3 Time Distributed Input images processed parallely by LSTM"
         lstm_text_size = cv2.getTextSize(lstm_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
         lstm_text_x = (bracket_start + bracket_end - lstm_text_size[0]) // 2
         cv2.putText(combined_frame, lstm_text, (lstm_text_x, bracket_y + 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
         
         # Add arrow between last image column and neural network visualization
         nn_arrow_x = x_offset
@@ -329,9 +319,32 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
         nn_height = max_height
         nn_fade_factor = min(max(idx - num_images * 10, 0) / 5, 1)  # Fade-in effect over 5 frames, starting after the last image
         
+        # Align bracket with the one for LSTM
+        nn_bracket_start = nn_x
+        nn_bracket_end = nn_x + nn_width
+        nn_bracket_y = bracket_y  # Use the same y-coordinate as the LSTM bracket
+        cv2.line(combined_frame, (nn_bracket_start, nn_bracket_y), (nn_bracket_end, nn_bracket_y), (255, 255, 255), 1)
+        cv2.line(combined_frame, (nn_bracket_start, nn_bracket_y), (nn_bracket_start, nn_bracket_y - 10), (255, 255, 255), 1)
+        cv2.line(combined_frame, (nn_bracket_end, nn_bracket_y), (nn_bracket_end, nn_bracket_y - 10), (255, 255, 255), 1)
+
+        other_end_text = "Highly Simplified"
+        other_end_text_size = cv2.getTextSize(other_end_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
+        other_end_text_x = nn_x + (nn_width - other_end_text_size[0]) // 2
+        # Align text with the LSTM text
+        cv2.putText(combined_frame, other_end_text, (other_end_text_x, bracket_y + 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+
         # Add arrow between neural network visualization and prediction column
         pred_arrow_x = nn_x + nn_width
 #        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
+
+        # Add 'Flatten->LSTM->Fully Connected' text below Neural Network
+        nn_text = "Flatten->LSTM->Output"
+        nn_text_size = cv2.getTextSize(nn_text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
+        nn_text_x = nn_x + (nn_width - nn_text_size[0]) // 2
+        cv2.putText(combined_frame, nn_text, (nn_text_x, nn_y + nn_height + 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
         
         # Add predictions to the right of the neural network visualization
         key = int(image_file.replace('.png', ''))
