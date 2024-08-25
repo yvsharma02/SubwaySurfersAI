@@ -14,6 +14,7 @@ from typing import Callable
 from PIL import Image
 import cv2
 import tensorflow as tf
+import textwrap
 
 def im_loader(path):
     raw = tf.io.read_file(path)
@@ -209,11 +210,11 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
     padding = 50  # Padding on each side
     pred_width = 200  # Width for prediction column
     combined_width = max_width * num_images + 50 * (num_images - 1) + 2 * padding + pred_width  # Extra 50 pixels for each arrow, plus padding and prediction width
-    combined_height = max_height + 40  # Add 40 pixels for labels and padding
+    combined_height = max_height + 150  # Increased height to accommodate text
     
     # Create arrow image
-    arrow = np.zeros((combined_height, 50, 3), dtype=np.uint8)
-    cv2.arrowedLine(arrow, (10, combined_height//2), (40, combined_height//2), (255, 255, 255), 2, tipLength=0.3)
+    arrow = np.zeros((max_height, 50, 3), dtype=np.uint8)
+    cv2.arrowedLine(arrow, (10, max_height//2), (40, max_height//2), (255, 255, 255), 2, tipLength=0.3)
     
     action_labels = ['Up', 'Down', 'Left', 'Right', 'Nothing']
     
@@ -224,51 +225,82 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             frame = cv2.imread(image_path)
             frames.append(frame)
         
-        # Combine frames with zoom-in and fade-in effects
+        # Combine frames with fade-in effect
         combined_frame = np.zeros((combined_height, combined_width, 3), dtype=np.uint8)
         x_offset = padding  # Start after left padding
         for i, frame in enumerate(frames):
-            zoom_factor = 1 + (0.5 * (1 - min(max(idx - i * 10, 0) / 30, 1)))  # Zoom effect over 30 frames, with 10 frame delay between columns
-            
             # Calculate fade factor (0 to 1) with delay for each column
             fade_factor = min(max(idx - i * 10, 0) / 20, 1)  # Fade-in effect over 20 frames, with 10 frame delay between columns
             
-            # Apply zoom effect
-            zoomed_frame = cv2.resize(frame, None, fx=zoom_factor, fy=zoom_factor)
-            
             # Center the frame without rescaling
-            y_start = max(0, (max_height - zoomed_frame.shape[0]) // 2)
-            x_start = max(0, (max_width - zoomed_frame.shape[1]) // 2)
-            y_end = min(max_height, y_start + zoomed_frame.shape[0])
-            x_end = min(max_width, x_start + zoomed_frame.shape[1])
+            y_start = (max_height - frame.shape[0]) // 2
+            x_start = (max_width - frame.shape[1]) // 2
             
             # Create a blank canvas of max_height x max_width
             centered_frame = np.zeros((max_height, max_width, 3), dtype=np.uint8)
             
-            # Place the zoomed frame in the center of the canvas
-            centered_frame[y_start:y_end, x_start:x_end] = zoomed_frame[:y_end-y_start, :x_end-x_start]
+            # Place the frame in the center of the canvas
+            centered_frame[y_start:y_start+frame.shape[0], x_start:x_start+frame.shape[1]] = frame
             
             # Apply fade-in effect
             faded_frame = (centered_frame * fade_factor).astype(np.uint8)
             
             # Place the frame in the combined image
-            y_offset = (combined_height - max_height) // 2
+            y_offset = (combined_height - max_height - 110) // 2
             combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+max_width] = faded_frame
             
-            # Add label below the image
+            # Add label below the image (centered and smaller)
             label = labels[i]
-            label_x = x_offset + max_width // 2 - 50  # Center the label
-            cv2.putText(combined_frame, label, (label_x, combined_height - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)[0]
+            label_x = x_offset + (max_width - label_size[0]) // 2
+            cv2.putText(combined_frame, label, (label_x, combined_height - 120), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            # Add additional information below each image
+            if i == 0:
+                text = "LSTM Input"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
+                text_x = x_offset + (max_width - text_size[0]) // 2
+                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
+                
+                # Display last three frames
+                if idx >= 2:
+                    last_three = [cv2.imread(os.path.join(input_folders[0], image_files[idx-2])),
+                                  cv2.imread(os.path.join(input_folders[0], image_files[idx-1])),
+                                  cv2.imread(os.path.join(input_folders[0], image_files[idx]))]
+                    for j, last_frame in enumerate(last_three):
+                        small_frame = cv2.resize(last_frame, (max_width // 4, max_height // 4))
+                        x_small = x_offset + j * (max_width // 4 + 5) + (max_width - 3 * max_width // 4 - 10) // 2
+                        y_small = combined_height - 90
+                        combined_frame[y_small:y_small+max_height//4, x_small:x_small+max_width//4] = small_frame
+            elif i == 1:
+                text = "3/16 channels"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
+                text_x = x_offset + (max_width - text_size[0]) // 2
+                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
+            elif i == 2:
+                text = "3/50 channels"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
+                text_x = x_offset + (max_width - text_size[0]) // 2
+                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
+            elif i == 3:
+                text = "3/100 channels"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.3, 1)[0]
+                text_x = x_offset + (max_width - text_size[0]) // 2
+                cv2.putText(combined_frame, text, (text_x, combined_height - 100), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
             
             x_offset += max_width
             if i < num_images - 1:
-                combined_frame[:, x_offset:x_offset+50] = arrow
+                combined_frame[y_offset:y_offset+max_height, x_offset:x_offset+50] = arrow
                 x_offset += 50
         
         # Add arrow between last image column and prediction column
         pred_arrow_x = x_offset
-        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, combined_height//2), (pred_arrow_x + 40, combined_height//2), (255, 255, 255), 2, tipLength=0.3)
+        cv2.arrowedLine(combined_frame, (pred_arrow_x + 10, y_offset + max_height//2), (pred_arrow_x + 40, y_offset + max_height//2), (255, 255, 255), 2, tipLength=0.3)
         
         # Add predictions to the right of the last image set
         key = int(image_file.replace('.png', ''))
@@ -282,18 +314,18 @@ def combine_images_with_arrows(input_folders: List[str], output_folder: str, lab
             
             # Add action label
             cv2.putText(combined_frame, action_label, (pred_x, pred_y + 5), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1, cv2.LINE_AA)
             
             # Add colored text for predicted value
             pred_text = f"{pred:.2f}"
             color = (0, int(pred * 255), int((1 - pred) * 255))  # Red (0) to Green (1) in BGR
             cv2.putText(combined_frame, pred_text, (pred_x + 100, pred_y + 5), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1, cv2.LINE_AA)
         
         # Save the combined frame
         output_path = os.path.join(output_folder, image_file)
         cv2.imwrite(output_path, combined_frame)
-    print(f"Combined images with zoom-in, fade-in effects, labels, and colored predictions saved in {output_folder}")
+    print(f"Combined images with fade-in effects, labels, and colored predictions saved in {output_folder}")
 # # Example usage:
 input_videos = [
     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
