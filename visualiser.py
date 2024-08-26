@@ -427,36 +427,39 @@ def draw_neural_network(image, x, y, width, height, fade_factor, pred_list):
                         line_color = (int(50 * fade_factor), int(50 * fade_factor), int(50 * fade_factor))  # Light gray for other lines
                     cv2.line(image, (layer_x, node_y), (next_layer_x, next_node_y), line_color, 1)
 # # Example usage:
-input_videos = [
-    'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
-    'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4',
-]
-output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
+# input_videos = [
+#     'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24/',
+#     'generated/visualiser/cnn3-4/player/medium-cnn3-4/2024-08-22-0-45-45/movie-brightest.mp4/12_5_4',
+# ]
+# output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
 # combine_images_with_arrows(input_videos, output_video)
 
-dataset = 'generated/output/3C90/player/medium-3C90/2024-08-25-18-24-24'
+dataset = 'generated/output/3C85/player/tighter-3C85/2024-08-25-18-38-38'
 vis_dir = dataset.replace("output", "visualiser")
 
-# if not os.path.exists(f'{vis_dir}/layer0'):
-#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer0', 0)
-# if not os.path.exists(f'{vis_dir}/layer2'):
-#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer2', 2)
-# if not os.path.exists(f'{vis_dir}/layer4'):
-#     visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer4', 4)
+if not os.path.exists(f'{vis_dir}/layer0'):
+    visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer0', 0)
+if not os.path.exists(f'{vis_dir}/layer2'):
+    visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer2', 2)
+if not os.path.exists(f'{vis_dir}/layer4'):
+    visualise(3, dataset, vis_CNN3, f'{vis_dir}/layer4', 4)
 
-# f0 = process_brightest_channels(f'{vis_dir}/layer0', f'{vis_dir}/layer0-brightest')
-# f2 = process_brightest_channels(f'{vis_dir}/layer2', f'{vis_dir}/layer2-brightest')
-# f4 = process_brightest_channels(f'{vis_dir}/layer4', f'{vis_dir}/layer4-brightest')
+f0 = process_brightest_channels(f'{vis_dir}/layer0', f'{vis_dir}/layer0-brightest')
+f2 = process_brightest_channels(f'{vis_dir}/layer2', f'{vis_dir}/layer2-brightest')
+f4 = process_brightest_channels(f'{vis_dir}/layer4', f'{vis_dir}/layer4-brightest')
 
-f0 = f"{vis_dir}/layer0-brightest/5_12_15"
-f2 = f"{vis_dir}/layer2-brightest/1_15_19"
-f4 = f"{vis_dir}/layer4-brightest/92_95_74"
-# # # Example usage:
+# f0 = f"{vis_dir}/layer0-brightest/5_15_12"
+# f2 = f"{vis_dir}/layer2-brightest/1_19_0"
+# f4 = f"{vis_dir}/layer4-brightest/82_65_83"
+
 input_videos = [
     dataset,
     f0,
     f2,
     f4,
 ]
+
 output_video = f'{vis_dir}/final'
 animate(input_videos, output_video, ['Original', 'Conv #1', 'Conv #2', 'Conv #3'])
+
+#make_movie(da, f'{vis_dir}/final.mp4')
