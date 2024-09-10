@@ -4,8 +4,8 @@ A LSTM-CNN based player for the game Subway Surfers, written in TensorFlow.
 An Example of how to define a model, and a dataset is provided in configs folder, architectures.py, and the generated/data folder. 
 
 
-https://github.com/user-attachments/assets/a4a90ae3-4a51-4af3-b0c3-b810b42859d0
-(Only showing the brighest 3 channels in each frame for visualization purposes.)
+![Visualization](https://github.com/user-attachments/assets/a4a90ae3-4a51-4af3-b0c3-b810b42859d0)
+<br/> (Only showing the brighest 3 channels in each frame for visualization purposes.)
 
 
 <br/>
