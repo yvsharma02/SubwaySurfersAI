@@ -1,6 +1,13 @@
 # Subway Surfers CNN
 
 A LSTM-CNN based player for the game Subway Surfers, written in TensorFlow.
+
+
+
+https://github.com/user-attachments/assets/a4a90ae3-4a51-4af3-b0c3-b810b42859d0
+
+
+
 An Example of how to define a model, and a dataset is provided in configs folder, architectures.py, and the generated/data folder. 
 <br/>
 
@@ -13,6 +20,7 @@ The model has an accuracy of 86 percent, although this stat does not mean much, 
 The main metric I was looking for is recall. Here I considered TP as how many times any action was required, and predicted. And FN as how many any action was required, and not taken. This is because taking a wrong action is the vast majority of times, harmless, but not taking an action usually means game over. <br/>
 I achieved about .85 recall for my model. This is the confusion matrix.
 
+![Confusion](https://github.com/user-attachments/assets/f8a028ce-eb15-4034-9311-5befce40f42f)
 
 
 <br/>
