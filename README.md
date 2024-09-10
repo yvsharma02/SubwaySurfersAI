@@ -14,12 +14,12 @@ https://github.com/user-attachments/assets/ef0d3117-6b52-4dda-92a6-860167602ef1
 
 <br/>
 
-This currently uses a 3 convolution, and 3 pooling layer deep CNN, along with an LSTM after flattening the Convolution Network. The final model has around 750K parameters. Initially I tried to predict only using a CNN. Although the predictions using it were mostly correct, the predictions were too early. I initially tried to a manual approach by holding onto previous few frame predictions, but in the sprit of automation, I looked for other solutions. An pretty much did what I was doing manually.<br/>
+This currently uses a 3 convolution, and 3 pooling layer deep CNN, along with an LSTM after flattening the Convolution Network. The final model has around 750K parameters. Initially I tried to predict only using a CNN. Although the predictions using it were mostly correct, there were timing usses, where the predictions were too early. I initially tried to a manual approach by holding onto previous few frame predictions, but in the sprit of automation, I looked for other solutions. An LSTM pretty much did what I was doing manually.<br/>
 
 This was trained on an agumented dataset of 160K images (80K original, mirrored vertically), downscaled to 170x82.
 The data was manually collected by playing the game, while running a scaper in background. <br/>
 The highest score the model was able to achieve was around 8K, which is impressive given that it was only trained for runs upto 10K. It could also beat 6K consistently. <br/>
-The model has an accuracy of 86 percent, although this stat does not mean much, as the dataset is highly imbalanced, having most of the images as DO_NOTHING. I am undersampling the majority class, so I could achieve any accuracy I wanted by overfiting the model to always predict DO_NOTHING. <br/>
+The model has an accuracy of 86%, although this stat does not mean much, as the dataset is highly imbalanced, having most of the images as DO_NOTHING. I am undersampling the majority class, so I could achieve any accuracy I wanted by overfiting the model to always predict DO_NOTHING. <br/>
 The main metric I was looking for is recall. Here I considered TP as how many times any action was required, and predicted. And FN as how many any action was required, and not taken. This is because taking a wrong action is the vast majority of times, harmless, but not taking an action usually means game over. <br/>
 I achieved about .85 recall for my model. This is the confusion matrix.
 
