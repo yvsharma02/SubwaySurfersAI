@@ -1,14 +1,13 @@
 # Subway Surfers CNN
 
 A LSTM-CNN based player for the game Subway Surfers, written in TensorFlow.
-
+An Example of how to define a model, and a dataset is provided in configs folder, architectures.py, and the generated/data folder. 
 
 
 https://github.com/user-attachments/assets/a4a90ae3-4a51-4af3-b0c3-b810b42859d0
+(Only showing the brighest 3 channels in each frame for visualization purposes.)
 
 
-
-An Example of how to define a model, and a dataset is provided in configs folder, architectures.py, and the generated/data folder. 
 <br/>
 
 This currently uses a 3 convolution, and 3 pooling layer deep CNN, along with an LSTM after flattening the Convolution Network. The final model has around 750K parameters. Initially I tried to predict only using a CNN. Although the predictions using it were mostly correct, the predictions were too early. I initially tried to a manual approach by holding onto previous few frame predictions, but in the sprit of automation, I looked for other solutions. An pretty much did what I was doing manually.<br/>
