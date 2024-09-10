@@ -11,6 +11,7 @@ class CustomDataset:
 
     dataset_name : str = None
     nothing_skip_rate = None
+    shift_amount = None
     
     # List of tuple (path_to_dataset, (start_trim_count, end_trim_count), list of specific indexes to ignore, include_mirrored).
     datasets : list[tuple[str, tuple[int, int], list[int], bool]] = None
@@ -20,7 +21,6 @@ class CustomDataset:
     path_label_pair : list[tuple[str, Action]] = None
 
     def load_path_label_pairs(self, height : int, width : int):
-
         if (self.currently_loaded_dimensions != (height, width)):
             self.reset()
 
@@ -47,12 +47,12 @@ class CustomDataset:
                         filepath = os.path.join(ds[0], "{}.png".format(index))
                         self.path_label_pair.append([filepath, int(label)])
 
-                # self.data.append([
-                #     (os.path.join(complete_downscaled_dir, "{}.png".format(index)), Action(int(label))) 
-                #     for line in lines 
-                #     for index, label, date, nl in line.replace(' ', '').split(';') if index not in ignore_indices])
-
-
+        shift_amount = self.shift_amount
+        if shift_amount != None and shift_amount > 0 and len(self.path_label_pair) > shift_amount:
+            for i in range(len(self.path_label_pair) - shift_amount):
+                self.path_label_pair[i][1] = self.path_label_pair[i + shift_amount][1]
+            self.path_label_pair = self.path_label_pair[:-shift_amount]
+        
     def reset(self):
         self.path_label_pair = []
         self.currently_loaded_dimensions = None

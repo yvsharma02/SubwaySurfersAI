@@ -24,6 +24,9 @@ DATASET_JSON_OUT_FILE = "generated/datasets_list.json"
 
 resultant_models_root = "generated/output/"
 
+#Shift predictions these many frames behind to deal with latency
+LATENCY_SHIFT_AMOUNT = 2
+
 def get_model_train_out_dir(model_name : str):
     return os.path.join(resultant_models_root, model_name)
 

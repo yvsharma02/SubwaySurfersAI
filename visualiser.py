@@ -33,7 +33,7 @@ def get_layer(model, layername):
     return None
 
 def vis_CNN3(output_dir, im_list, im_no, out_layer_count):
-    model = tf.keras.models.load_model(os.path.join(settings.get_model_train_out_dir("3C95"), "model.keras"))
+    model = tf.keras.models.load_model(os.path.join("generated/output/3C85", "model.keras"))
 
     intermediate_layer_model = tf.keras.Model(inputs=model.input,
                                           outputs=model.layers[out_layer_count].output)
@@ -195,6 +195,7 @@ def animate(input_folders: List[str], output_folder: str, labels: List[str]):
         if file.endswith('.png') and all(os.path.exists(os.path.join(folder, file)) for folder in input_folders):
             image_files.append(file)
     image_files.sort(key=lambda x: int(x[:-4]))  # Sort based on integer value of filename without '.png'
+    image_files = image_files[4:]
     
     if not image_files:
         print("No common images found across all input folders.")
@@ -434,7 +435,7 @@ def draw_neural_network(image, x, y, width, height, fade_factor, pred_list):
 # output_video = 'generated/visualiser/cnn3-4/player/medium-cnn3-4/final'
 # combine_images_with_arrows(input_videos, output_video)
 
-dataset = 'generated/output/3C85/player/tighter-3C85/2024-08-25-18-38-38'
+dataset = 'generated\\output\\3C85\player\\tighter-3C85\\2024-08-25-23-46-46'
 vis_dir = dataset.replace("output", "visualiser")
 
 if not os.path.exists(f'{vis_dir}/layer0'):
@@ -462,4 +463,4 @@ input_videos = [
 output_video = f'{vis_dir}/final'
 animate(input_videos, output_video, ['Original', 'Conv #1', 'Conv #2', 'Conv #3'])
 
-#make_movie(da, f'{vis_dir}/final.mp4')
+make_movie(output_video, f'{vis_dir}/final.mp4')
